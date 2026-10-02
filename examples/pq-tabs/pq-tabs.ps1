@@ -5,6 +5,8 @@
     Snapshots are stored in this script's folder unless -LayoutsDir is given.
 
     Requires the JIGS_DIR environment variable to point at the jigs clone.
+    If PowerShell refuses to run this script, see the "Execution policy"
+    section of the jigs README: https://github.com/MangkorN/jigs#execution-policy
 
     The "pq-" prefix stands for PiQuest, the project this wrapper
     was originally written for.

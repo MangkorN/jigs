@@ -50,6 +50,30 @@ Set `JIGS_DIR` as a Windows user environment variable, then restart any open ter
 
 `vs-tabs.ps1` can be run directly from `powershell/`, but the intended use is a small per-project wrapper (below).
 
+#### Execution policy
+
+If PowerShell refuses to run a script, the error message tells you which of two causes applies.
+
+**"running scripts is disabled on this system"**: all scripts are blocked. Check which scope enforces it with `Get-ExecutionPolicy -List`. If MachinePolicy and UserPolicy are `Undefined`, fix it once (no admin rights needed):
+
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+```
+
+If they're set by Group Policy, that won't take effect. Bypass per run instead:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\pq-tabs.ps1 -Action List
+```
+
+**"is not digitally signed"**: the policy is fine, but this file carries Windows' downloaded-from-the-internet tag, which is added to files saved from a browser, chat, or email, or extracted from a downloaded zip with Explorer. Remove it per file:
+
+```powershell
+Unblock-File .\pq-tabs.ps1
+```
+
+Files obtained through `git clone` never carry this tag.
+
 ## Tools
 
 ### lsf / catcs
