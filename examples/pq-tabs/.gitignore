@@ -1,0 +1,3 @@
+# Ignores saved tab-layout snapshots (*.json) in this folder.
+# Scripts (*.ps1) are unaffected and stay tracked.
+*.json

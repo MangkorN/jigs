@@ -1,0 +1,12 @@
+# Sourced from ~/.bashrc. Loads every function file in ./functions.
+_jigs_dir=${BASH_SOURCE[0]%/*}
+for _f in "$_jigs_dir"/functions/*.sh; do
+    [[ -r $_f ]] && source "$_f"
+done
+unset _f _jigs_dir
+
+alias c='clear'
+alias gs='git status'
+alias glo='git log --oneline'
+
+alias python='winpty python.exe'
