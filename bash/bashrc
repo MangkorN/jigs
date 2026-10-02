@@ -5,6 +5,9 @@ for _f in "$_jigs_dir"/functions/*.sh; do
 done
 unset _f _jigs_dir
 
+# Tab-completing a path that starts with a variable ($pq/Scr<Tab>) expands it in place.
+shopt -s direxpand
+
 alias c='clear'
 alias gs='git status'
 alias glo='git log --oneline'
