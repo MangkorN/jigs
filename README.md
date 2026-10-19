@@ -22,10 +22,10 @@ examples/
 
 ### Bash (Git Bash)
 
-Clone the repo, then add one line to `~/.bashrc` pointing at the clone:
+Clone the repo, then add a line to `~/.bashrc` that loads it (the file is created if it doesn't exist):
 
 ```bash
-source /d/Repos/jigs/bash/bashrc
+echo 'source /d/Repos/jigs/bash/bashrc' >> ~/.bashrc
 ```
 
 If `~/.bashrc` already defines any of the same functions or aliases, remove those copies. Otherwise whichever definition comes last wins.
@@ -34,10 +34,10 @@ New terminals pick everything up automatically. For an already open terminal, ru
 
 New tools go in `bash/functions/` as `*.sh` files and are picked up the same way. They must use LF line endings, since bash fails on CRLF.
 
-(Optional) Default target for `csapply`, added to `~/.bashrc` after the `source` line:
+(Optional) Default target for `csapply`:
 
 ```bash
-export CSAPPLY_TARGET=/d/Repos/MyProject/Assets
+echo 'export CSAPPLY_TARGET=/d/Repos/MyProject/Assets' >> ~/.bashrc
 ```
 
 ### PowerShell
@@ -127,7 +127,7 @@ gdm [git diff args]
 
 ### vs-tabs (PowerShell)
 
-Saves and restores Visual Studio 2022 (17.9+) document tab layouts by name. Run `vs-tabs.ps1` with no arguments for full help.
+Saves and restores Visual Studio 2022 (17.9+) document tab layouts by name. Actions are `save`, `load`, `list`, `view` (read-only), and `help` (the default). Action and snapshot name are positional, so `.\vs-tabs.ps1 save my-layout` is the same as `.\vs-tabs.ps1 -Action Save -Name my-layout`. Run `vs-tabs.ps1` with no arguments for full help.
 
 #### Per-project wrapper
 
@@ -135,6 +135,19 @@ Saves and restores Visual Studio 2022 (17.9+) document tab layouts by name. Run 
 
 1. Copy `pq-tabs.ps1` and `.gitignore` into a folder one level below the project root (the folder containing the `.sln`), e.g. `<ProjectRoot>/VSTabs/`. Rename the script as you like.
 2. Make sure `JIGS_DIR` is set (see Install).
-3. From that folder: `.\pq-tabs.ps1 -Action Save -Name my-layout`
+3. From that folder: `.\pq-tabs.ps1 save my-layout`
+4. (Optional) Add a `pqt` alias to your PowerShell profile so the wrapper runs from any directory:
+
+   ```powershell
+   if (-not (Test-Path $PROFILE)) { New-Item $PROFILE -Force | Out-Null }; Add-Content $PROFILE 'Set-Alias pqt D:\Repos\MyProject\VSTabs\pq-tabs.ps1'
+   ```
+
+   - `$PROFILE` is the path of the script PowerShell runs at the start of every session (each PowerShell version has its own).
+   - `if (-not (Test-Path $PROFILE)) { New-Item $PROFILE -Force | Out-Null }` creates that file, and its folder, only if it doesn't exist yet, so an existing profile is never overwritten.
+   - `Add-Content` appends the `Set-Alias` line to the profile, so every new session defines the alias.
+
+   New windows pick it up automatically. For an already open window, run `. $PROFILE`.
+
+   Then `pqt`, `pqt list`, `pqt view`, `pqt view my-layout`, `pqt save my-layout` and `pqt load my-layout` all work, and snapshot names tab-complete from the wrapper's folder regardless of the current directory.
 
 Snapshots are saved as `.json` next to the wrapper and ignored by its `.gitignore`.

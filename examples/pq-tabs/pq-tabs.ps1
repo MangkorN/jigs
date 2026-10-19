@@ -18,18 +18,29 @@
 .EXAMPLE
     .\pq-tabs.ps1 -Action Load -Name combat-refactor
 .EXAMPLE
-    .\pq-tabs.ps1 -Action Preview -Name combat-refactor
+    .\pq-tabs.ps1 -Action View -Name combat-refactor
+.EXAMPLE
+    # Positional form, via a profile alias (Set-Alias pqt <path>\pq-tabs.ps1)
+    pqt load combat-refactor
 #>
 
 [CmdletBinding()]
 param(
-    [ValidateSet('Save', 'Load', 'List', 'Preview', 'Help')]
+    [Parameter(Position = 0)]
+    [ValidateSet('Save', 'Load', 'List', 'View', 'Help')]
     [string]$Action = 'Help',
 
+    [Parameter(Position = 1)]
     [ArgumentCompleter({
         param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
-        # Same approximation as vs-tabs.ps1's completer - see its comment.
-        $dir = if ($fakeBoundParameters['LayoutsDir']) { $fakeBoundParameters['LayoutsDir'] } else { $PWD.Path }
+        # Same resolution as vs-tabs.ps1's completer, see its comment.
+        $dir = $fakeBoundParameters['LayoutsDir']
+        if (-not $dir) {
+            $typed = $commandAst.GetCommandName()
+            $cmd = if ($typed) { Get-Command $typed -ErrorAction SilentlyContinue }
+            while ($cmd -is [System.Management.Automation.AliasInfo]) { $cmd = $cmd.ResolvedCommand }
+            $dir = if ($cmd.Path) { Split-Path $cmd.Path -Parent } else { $PWD.Path }
+        }
         if (-not (Test-Path $dir)) { return }
         Get-ChildItem -Path $dir -Filter "$wordToComplete*.json" -File -ErrorAction SilentlyContinue |
             ForEach-Object {

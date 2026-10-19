@@ -4,14 +4,16 @@
     via the solution's DocumentLayout.json.
 
 .PARAMETER Action
-    Save, Load, List, Preview, or Help (default). Help prints common
+    Save, Load, List, View, or Help (default). Help prints common
     commands plus the execution-policy fix, with no solution required.
-    Preview is read-only: bare, it shows the live DocumentLayout.json;
+    View is read-only: bare, it shows the live DocumentLayout.json;
     with -Name, it shows a stored snapshot's contents without loading it.
+    Positional, so the -Action flag can be omitted.
 
 .PARAMETER Name
     Snapshot name (required for Save/Load). Tab-completes against .json
     files in the layouts folder; bare name or full filename both work.
+    Positional (second, after Action), so the -Name flag can be omitted.
 
 .PARAMETER SolutionPath
     Path to the .sln file. Auto-detected if omitted and exactly one .sln
@@ -35,10 +37,13 @@
     .\vs-tabs.ps1 -Action List
 .EXAMPLE
     # What Save would capture right now, without saving anything
-    .\vs-tabs.ps1 -Action Preview
+    .\vs-tabs.ps1 -Action View
 .EXAMPLE
     # What a stored snapshot contains, without loading it
-    .\vs-tabs.ps1 -Action Preview -Name combat-refactor
+    .\vs-tabs.ps1 -Action View -Name combat-refactor
+.EXAMPLE
+    # Positional form of the same command
+    .\vs-tabs.ps1 view combat-refactor
 .EXAMPLE
     # Not running from a folder with exactly one .sln (or it has more than one)
     .\vs-tabs.ps1 -Action Save -Name combat-refactor -SolutionPath D:\Repos\PiQuest-Unity\PiQuest.sln
@@ -52,16 +57,24 @@
 
 [CmdletBinding()]
 param(
-    [ValidateSet('Save', 'Load', 'List', 'Preview', 'Help')]
+    [Parameter(Position = 0)]
+    [ValidateSet('Save', 'Load', 'List', 'View', 'Help')]
     [string]$Action = 'Help',
 
+    [Parameter(Position = 1)]
     [ArgumentCompleter({
         param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
-        # Can't reliably resolve the invoked script's own folder from inside
-        # a completer, so this approximates Get-LayoutsDirectory's default
-        # with $PWD instead - correct whenever run via ".\..." from that
-        # folder (the normal case), and -LayoutsDir wins if already typed.
-        $dir = if ($fakeBoundParameters['LayoutsDir']) { $fakeBoundParameters['LayoutsDir'] } else { $PWD.Path }
+        # Mirrors Get-LayoutsDirectory: -LayoutsDir if already typed, otherwise
+        # the folder of the invoked script, resolved from the command as typed
+        # (an alias or a path), so completion works from any directory.
+        # Falls back to $PWD if the command can't be resolved.
+        $dir = $fakeBoundParameters['LayoutsDir']
+        if (-not $dir) {
+            $typed = $commandAst.GetCommandName()
+            $cmd = if ($typed) { Get-Command $typed -ErrorAction SilentlyContinue }
+            while ($cmd -is [System.Management.Automation.AliasInfo]) { $cmd = $cmd.ResolvedCommand }
+            $dir = if ($cmd.Path) { Split-Path $cmd.Path -Parent } else { $PWD.Path }
+        }
         if (-not (Test-Path $dir)) { return }
         Get-ChildItem -Path $dir -Filter "$wordToComplete*.json" -File -ErrorAction SilentlyContinue |
             ForEach-Object {
@@ -88,10 +101,15 @@ COMMANDS
 
   .\vs-tabs.ps1                                     Show this help (default action)
   .\vs-tabs.ps1 -Action List
-  .\vs-tabs.ps1 -Action Preview
-  .\vs-tabs.ps1 -Action Preview -Name <snapshot-name>
+  .\vs-tabs.ps1 -Action View
+  .\vs-tabs.ps1 -Action View -Name <snapshot-name>
   .\vs-tabs.ps1 -Action Save -Name <snapshot-name>
   .\vs-tabs.ps1 -Action Load -Name <snapshot-name>
+
+  Action and Name are positional, so the flags can be dropped:
+
+    .\vs-tabs.ps1 list
+    .\vs-tabs.ps1 save <snapshot-name>
 
   Add -SolutionPath <path\to.sln> if the current directory doesn't contain
   exactly one .sln. Add -LayoutsDir <path> to store/read snapshots somewhere
@@ -307,7 +325,7 @@ switch ($Action) {
         } | Format-Table -AutoSize
     }
 
-    'Preview' {
+    'View' {
         # Read-only in both directions - never touches DocumentLayout.json
         # or any snapshot file. Bare, shows the live file (what Save would
         # capture right now); with -Name, shows a stored snapshot's contents
