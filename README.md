@@ -10,6 +10,7 @@ bash/
     csapply.sh        overwrite same-named files in a project from a flat folder
     csbundle.sh       bundle .cs files into one .txt per directory
     gdm.sh            git diff showing changed lines only
+    gitro.sh          read-only git commands from a fixed menu, also served to other processes
     lsf.sh            sorted list of files under a directory (lsfc: to clipboard)
     toclip.sh         copy any command's output to the clipboard
 powershell/
@@ -124,6 +125,47 @@ gdm [git diff args]
 ```
 
 `git diff` showing only added/removed lines, with file headers but no context lines or hunk headers.
+
+### gitro
+
+```bash
+gitro [-C <repo>] <command> [<flag>...] [<arg>...] [-- <path>...]
+gitro serve [-i <seconds>] <repo> <dir>
+gitro help [<command> | serve]
+```
+
+Read-only git commands from a fixed menu: status, diffs, history, blame, search, branches, tags, refs, stashes and more. Run `gitro` with no arguments for the full list, and `gitro help <command>` for a command's usage and allowed flags.
+
+Each command maps to one git subcommand and accepts only the flags on its allow-list, so nothing it runs can change the repository or read files outside it:
+
+- Flags that write files, run external programs or reach outside the repository (`--output`, `--ext-diff`, `--no-index`, `grep -f`, `blame --contents`, ...) are on no list. Write actions such as `branch -d` can't be expressed either, and `branch` and `tag` always run with `--list`.
+- Arguments before `--` can't start with `-`, so they can't pass options. Everything after `--` is a path.
+- Commands run against a temporary copy of the index, since `git status` and `git diff` otherwise refresh it and write it back.
+- `remote` hides any credentials embedded in remote URLs.
+
+Flags that take a value are written as one argument (`-n5`, `--format=%h %s`). A cluster of single-letter flags works when each letter is allowed on its own (`shortlog -sn`).
+
+```bash
+gitro status --short --branch
+gitro diff --cached --stat
+gitro log --oneline -10 -- Assets/Scripts
+gitro show HEAD~2:README.md
+gitro -C /d/Repos/Other rev-list --count --left-right main...@{upstream}
+```
+
+#### Serving other processes
+
+`gitro serve` lets another process inspect a repository with no access to it, such as a tool in a VM or container that can only reach a shared folder. It watches `<dir>` and answers each request that appears there, until stopped with Ctrl+C:
+
+1. The caller writes a request with one argument per line, the command first, under a temporary name, then renames it to `<name>.req`.
+2. gitro runs it and writes `<name>.out`: a `# gitro exit=<code>: <request>` line, followed by the command's output and errors.
+3. Requests are removed once taken, and responses after an hour.
+
+```bash
+gitro serve /d/Repos/MyProject /d/Exchange/myproject
+```
+
+A `help serve` request returns these steps, so a caller can learn the protocol through the folder itself. Each server answers for one repository. To serve several, run one per repository, each with its own folder.
 
 ### vs-tabs (PowerShell)
 
