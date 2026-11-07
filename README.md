@@ -145,12 +145,16 @@ Each command maps to one git subcommand and accepts only the flags on its allow-
 
 Flags that take a value are written as one argument (`-n5`, `--format=%h %s`). A cluster of single-letter flags works when each letter is allowed on its own (`shortlog -sn`).
 
+Output goes to the terminal, so it can be redirected or piped like any command's:
+
 ```bash
 gitro status --short --branch
-gitro diff --cached --stat
-gitro log --oneline -10 -- Assets/Scripts
+gitro diff --cached --stat -- src
+gitro log --oneline -10
 gitro show HEAD~2:README.md
-gitro -C /d/Repos/Other rev-list --count --left-right main...@{upstream}
+gitro -C /d/Repos/MyProject rev-list --count --left-right main...@{upstream}   # another repository
+gitro -C /d/Repos/MyProject status > /d/Temp/status.txt                        # to a file
+toclip gitro diff --cached --stat                                              # to the clipboard
 ```
 
 #### Serving other processes
@@ -163,6 +167,14 @@ gitro -C /d/Repos/Other rev-list --count --left-right main...@{upstream}
 
 ```bash
 gitro serve /d/Repos/MyProject /d/Exchange/myproject
+```
+
+The server's terminal only logs one line per request and doesn't read typed input. To run commands yourself, use `gitro` directly in another terminal. To try the protocol by hand, write a request from another terminal:
+
+```bash
+printf '%s\n' status --short > /d/Exchange/myproject/t1.tmp
+mv /d/Exchange/myproject/t1.tmp /d/Exchange/myproject/t1.req
+sleep 1; cat /d/Exchange/myproject/t1.out
 ```
 
 A `help serve` request returns these steps, so a caller can learn the protocol through the folder itself. Each server answers for one repository. To serve several, run one per repository, each with its own folder.

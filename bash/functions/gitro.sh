@@ -3,10 +3,10 @@
 # so a caller can see status, diffs, history and refs but can never write to the repository
 # or reach files outside it. 'gitro serve' answers the same commands for other processes
 # through request files in a folder, so they never need access to the repository itself.
-#   gitro                                   help
-#   gitro diff --cached -- Assets           staged changes under Assets
-#   gitro -C /d/Repos/MyRepo log -5 --stat  another repository
-#   gitro serve /d/Repos/MyRepo /d/Exchange answer requests dropped into /d/Exchange
+#   gitro                                                 help
+#   gitro diff --cached -- src                            staged changes under src
+#   gitro -C /d/Repos/MyProject log -5 --stat             another repository
+#   gitro serve /d/Repos/MyProject /d/Exchange/myproject  answer requests dropped into that folder
 
 _GITRO_MENU=(
     '#Working tree and index'
@@ -424,6 +424,14 @@ Runs in the current directory's repository unless -C names one.
 Each command accepts only the flags on its allow-list (gitro help <command>),
 and everything after -- is a path. Nothing is written to the repository,
 not even the index: commands run against a temporary copy of it.
+Output goes to the terminal, so it can be redirected or piped like any command's.
+
+examples:
+  gitro status --short --branch
+  gitro diff --cached --stat -- src
+  gitro log --oneline -10
+  gitro -C /d/Repos/MyProject show HEAD~2:README.md
+  gitro -C /d/Repos/MyProject status > /d/Temp/status.txt
 
 commands:
 EOF
@@ -490,6 +498,14 @@ without access to the repository itself.
 A 'help' request answers with this help, and 'help <command>' with that command's.
 gitro polls every 0.5 seconds unless -i sets another interval.
 It keeps its own temporary files in <dir> as .work, .body and .part.
+The server's terminal only logs one line per request and doesn't read typed input.
+To run commands yourself, use gitro directly in another terminal.
+
+example: start a server, then write a request by hand from another terminal:
+  gitro serve /d/Repos/MyProject /d/Exchange/myproject
+  printf '%s\n' status --short > /d/Exchange/myproject/t1.tmp
+  mv /d/Exchange/myproject/t1.tmp /d/Exchange/myproject/t1.req
+  sleep 1; cat /d/Exchange/myproject/t1.out
 EOF
 }
 
