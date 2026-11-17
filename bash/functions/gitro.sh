@@ -849,7 +849,12 @@ EOF
             (( site_given )) && cmd+=(--site-url "$site")
             ;;
     esac
-    "${cmd[@]}"
+    # Only the foreground companion reads the terminal; the other actions get no input, so they can't hold it.
+    if (( foreground )); then
+        "${cmd[@]}"
+    else
+        "${cmd[@]}" </dev/null
+    fi
 }
 
 # Run as a script (bash gitro.sh status) rather than loaded with source: behaves like the gitro command.

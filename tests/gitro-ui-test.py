@@ -84,18 +84,37 @@ class Companion:
 
 
 class Checks:
+    """Counts checks and prints one line for each, with its section. A failure's detail is shortened to fit
+    the terminal's width, and printed in full after the last check."""
+
     def __init__(self):
         self.failed = 0
         self.passed = 0
+        self.section = ''
+        self.details = []
+        self.width = shutil.get_terminal_size((120, 24)).columns
 
     def check(self, name, ok, detail=''):
+        line = '%-6s%-16s%s' % ('ok' if ok else 'FAIL', self.section, name)
         if ok:
             self.passed += 1
-            print('  ok    ' + name)
         else:
             self.failed += 1
-            print('  FAIL  %s%s' % (name, ': ' + str(detail) if detail else ''))
+            if detail != '':
+                self.details.append('%s, %s:\n  %s' % (self.section, name, detail))
+                text = ' '.join(str(detail).split())
+                room = self.width - len(line) - 3
+                if room >= 20:
+                    line += ': ' + (text if len(text) <= room else text[:room - 3] + '...')
+        print(line)
         return ok
+
+    def summary(self):
+        if self.details:
+            print('\nFailure details:')
+            for detail in self.details:
+                print(detail)
+        print('%d passed, %d failed' % (self.passed, self.failed))
 
 
 def git(repo, *args):
@@ -165,14 +184,13 @@ def outside_server(bash, repo, folder):
     return process
 
 
-def run_checks(c, root):
-    t = Checks()
+def run_checks(t, c, root):
     repo = make_repo(root)
     folder = os.path.join(root, 'exchange')
     plain = os.path.join(root, 'not-a-repo')
     os.makedirs(plain)
 
-    print('security')
+    t.section = 'security'
     status, _, _, _ = c.call('GET', '/api/status', token=False)
     t.check('no token is refused (401)', status == 401, status)
     status, _, _, _ = c.call('GET', '/api/status', host='evil.test:%d' % c.port)
@@ -191,11 +209,11 @@ def run_checks(c, root):
         status, _, _, _ = c.call('GET', path, token=False)
         t.check('no files are served: %s (404)' % path, status == 404, status)
 
-    print('status')
+    t.section = 'status'
     status, info, _, _ = c.call('GET', '/api/status')
     t.check('status answers', status == 200, status)
     if status != 200:
-        return t
+        return
     t.check('api version 1', info.get('api') == 1, info.get('api'))
     t.check('platform is named', info.get('platform') in ('windows', 'macos', 'linux'), info.get('platform'))
     t.check('picker is a boolean', isinstance(info.get('picker'), bool), info.get('picker'))
@@ -203,7 +221,7 @@ def run_checks(c, root):
             (info.get('pid'), info.get('started')))
     c.last = info['seq']
 
-    print('folders')
+    t.section = 'folders'
     os.makedirs(os.path.join(root, '.dotted'))
     with open(os.path.join(root, 'file.txt'), 'w') as f:
         f.write('not a folder\n')
@@ -222,14 +240,14 @@ def run_checks(c, root):
     status, value, _, _ = c.call('GET', '/api/folders?path=' + quote(os.path.join(root, 'missing')))
     t.check('a missing folder is 404', status == 404, (status, value))
 
-    print('servers')
+    t.section = 'servers'
     status, value, _, _ = c.call('POST', '/api/servers', {'repo': 'relative/path', 'dir': folder})
     t.check('a relative path is refused (400)', status == 400, (status, value))
     status, value, _, _ = c.call('POST', '/api/servers', {'repo': os.path.join(root, 'missing'), 'dir': folder})
     t.check('a missing repository is refused (400)', status == 400, (status, value))
     status, server, _, _ = c.call('POST', '/api/servers', {'repo': repo, 'dir': folder})
     if not t.check('a server starts', status == 200 and server.get('state') == 'running', (status, server)):
-        return t
+        return
     sid = server['id']
     serving = c.wait_for(lambda e: e.get('server') == sid and e['kind'] == 'log' and 'serving' in e['text'])
     t.check('gitro reports serving, keeping responses', serving is not None and 'keeping responses' in serving['text'],
@@ -240,7 +258,7 @@ def run_checks(c, root):
     status, value, _, _ = c.call('POST', '/api/servers', {'repo': repo, 'dir': folder})
     t.check('a second server on the same folder is refused (409)', status == 409, (status, value))
 
-    print('a gitro serve outside the companion')
+    t.section = 'outside server'
     claimed = os.path.join(root, 'exchange-claimed')
     outside = outside_server(info['bash'], repo, claimed)
     try:
@@ -260,7 +278,7 @@ def run_checks(c, root):
         if status == 200:
             c.call('POST', '/api/servers/%d/remove' % value['id'], {})
 
-    print('requests from the page')
+    t.section = 'page requests'
     status, value, _, _ = c.call('POST', '/api/request', {'server': sid, 'args': ['status', '--short', '--branch']})
     if t.check('a request is accepted', status == 200 and value.get('name'), (status, value)):
         name = value['name']
@@ -280,7 +298,7 @@ def run_checks(c, root):
     status, value, _, _ = c.call('GET', '/api/response?server=%d&name=..%%2fx' % sid)
     t.check('a response name with a slash is refused (400)', status == 400, (status, value))
 
-    print('an outside caller')
+    t.section = 'outside caller'
     write_request(folder, 'outside-1', ['log', '--oneline', '-1'])
     out = os.path.join(folder, 'outside-1.out')
     if t.check('gitro answers it', wait_file(out), out):
@@ -294,7 +312,7 @@ def run_checks(c, root):
         status, _, text, _ = c.call('GET', '/api/response?server=%d&name=outside-1' % sid)
         t.check('its kept copy outlives the removed .out', status == 200 and 'First commit' in text, status)
 
-    print('waiting for events')
+    t.section = 'events'
     timer = threading.Timer(1.0, lambda: c.call('POST', '/api/servers/%d/restart' % sid, {}))
     timer.start()
     started = time.time()
@@ -307,7 +325,7 @@ def run_checks(c, root):
         c.events.extend(value['events'])
         c.last = value['last']
 
-    print('stop, restart, remove')
+    t.section = 'stop, remove'
     running = c.wait_for(lambda e: e.get('server') == sid and e['kind'] == 'state' and e['state'] == 'running'
                          and e['seq'] > (serving['seq'] if serving else 0))
     t.check('restart stops, then runs again', running is not None and any(
@@ -337,7 +355,6 @@ def run_checks(c, root):
     t.check('an unknown server is 404', status == 404, (status, value))
     status, value, _, _ = c.call('GET', '/api/nothing')
     t.check('an unknown call is 404', status == 404, (status, value))
-    return t
 
 
 def remove_tree(path):
@@ -378,7 +395,7 @@ def wait_dead(pid, timeout=10):
 
 def check_lifecycle_start(t, port):
     """'start' twice: the first starts a companion in the background, the second finds it. Returns its session."""
-    print('start')
+    t.section = 'ui start'
     started = time.time()
     code, output = companion('start', '--open', 'none', '--port', str(port), '--site-url', '')
     t.check("'start' returns once the companion answers", code == 0 and 'running in the background' in output
@@ -399,7 +416,7 @@ def check_lifecycle_start(t, port):
 
 def check_lifecycle_stop(t, session, root):
     """'stop' ends the companion and its servers, and marks the session ended."""
-    print('stop')
+    t.section = 'ui stop'
     c = Companion(session['port'], session['token'])
     folder = os.path.join(root, 'exchange-stop')
     status, server, _, _ = c.call('POST', '/api/servers', {'repo': os.path.join(root, 'repo'), 'dir': folder})
@@ -423,7 +440,7 @@ def check_lifecycle_stop(t, session, root):
 def check_dies_with_companion(t, port, root):
     """Kills a companion outright, then checks its server stopped answering by itself,
     and that 'stop' clears the session it left behind."""
-    print('killed')
+    t.section = 'ui killed'
     process = subprocess.Popen([sys.executable, COMPANION, 'start', '--foreground', '--open', 'none', '--port', str(port),
                                 '--site-url', ''], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     deadline = time.time() + 10
@@ -485,13 +502,11 @@ def main():
             port = free_port()
             session = check_lifecycle_start(t, port)
             if session:
-                checks = run_checks(Companion(port, session['token']), os.path.join(root, 'api'))
-                t.passed += checks.passed
-                t.failed += checks.failed
+                run_checks(t, Companion(port, session['token']), os.path.join(root, 'api'))
                 check_lifecycle_stop(t, session, root)
             check_dies_with_companion(t, free_port(), root)
         else:
-            t = run_checks(Companion(args.port, args.token), root)
+            run_checks(t, Companion(args.port, args.token), root)
     finally:
         if args.launch:
             companion('stop')
@@ -499,7 +514,7 @@ def main():
             remove_tree(root)
         except OSError as error:
             print('could not remove %s: %s' % (root, error))
-    print('%d passed, %d failed' % (t.passed, t.failed))
+    t.summary()
     sys.exit(t.failed)
 
 

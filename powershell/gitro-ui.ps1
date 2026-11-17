@@ -1292,10 +1292,24 @@ function Invoke-Request($Request) {
         }
         Invoke-ApiCall $Request $body
     }
-    catch [ArgumentException] { Send-Json $Request 400 @{ error = $_.Exception.Message } }
-    catch [Collections.Generic.KeyNotFoundException] { Send-Json $Request 404 @{ error = $_.Exception.Message } }
-    catch [InvalidOperationException] { Send-Json $Request 409 @{ error = $_.Exception.Message } }
-    catch { Send-Json $Request 500 @{ error = $_.Exception.Message } }
+    catch {
+        $failure = Get-ApiFailure $_.Exception
+        Send-Json $Request $failure.Status @{ error = $failure.Message }
+    }
+}
+
+# The HTTP status and message for an API call that threw: 409 for a conflict with the current state, 400 for bad input,
+# 404 for an unknown id, and 500 for anything else. Each type is tested with -is, along the chain of inner exceptions
+# that PowerShell may wrap around one, rather than with typed catch clauses.
+function Get-ApiFailure($Exception) {
+    for ($current = $Exception; $current; $current = $current.InnerException) {
+        $status = 0
+        if ($current -is [System.InvalidOperationException]) { $status = 409 }
+        elseif ($current -is [System.ArgumentException]) { $status = 400 }
+        elseif ($current -is [System.Collections.Generic.KeyNotFoundException]) { $status = 404 }
+        if ($status) { return @{ Status = $status; Message = $current.Message } }
+    }
+    return @{ Status = 500; Message = $Exception.Message }
 }
 
 # API calls, all JSON unless noted:
@@ -1450,7 +1464,7 @@ function Format-Failure($ErrorRecord) {
 
 <# MAIN ================================================================================================================= #>
 
-# Ends this process for certain once the companion is done. When it was started as a script (-File), as 'gitro ui'
+# Ends this process for certain once its action is done. When it was started as a script (-File), as 'gitro ui'
 # and 'start' do, a plain exit could leave it waiting on a thread it started. In a PowerShell session, exit is enough.
 function Exit-Companion([int]$Code) {
     $launchedAsFile = $false
@@ -1460,10 +1474,10 @@ function Exit-Companion([int]$Code) {
 }
 
 switch ($Action) {
-    'stop' { exit (Stop-Companion) }
-    'status' { exit (Show-Companion) }
+    'stop' { Exit-Companion (Stop-Companion) }
+    'status' { Exit-Companion (Show-Companion) }
 }
-if (-not $Foreground) { exit (Start-Companion) }
+if (-not $Foreground) { Exit-Companion (Start-Companion) }
 
 # From here on, this process is the companion.
 $Picker = $null
