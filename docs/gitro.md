@@ -71,6 +71,104 @@ gitro serve -n piquest /d/Repos/PiQuest-Unity /d/Exchange/piquest
 gitro list /d/Exchange    # the servers answering in /d/Exchange and the folders under it
 ```
 
+## Connecting a caller
+
+A caller is anything that can write and read files in the request folder: an AI agent working in a sandbox, a tool in a VM or container,
+a script running under another account. It needs no git, no access to the repository and nothing installed. Writing one file and reading
+another is the whole protocol.
+
+**What a caller can see:** anything git can show about the repository, as far as the allow-lists permit: its files, history, diffs,
+branches and tags. **What it can't do:** change anything, run anything but gitro's commands, or read outside the repository.
+So serve only repositories the caller may read.
+
+To connect one:
+
+1. **Pick a request folder the caller can reach:** for an agent on your machine, a folder it's allowed to work in; for a VM or container,
+   a shared or mounted folder. Keep it outside the repository, since the caller needs only this folder.
+2. **Start a server** for the repository and that folder, in a terminal or on the Run page (`gitro ui`):
+
+   ```bash
+   gitro serve -k /d/Repos/MyProject /d/Exchange/myproject
+   ```
+
+   `-k` keeps a copy of each response for an hour, so you can see what the caller got as well as what it asked.
+3. **Tell the caller where the folder is.** It learns the rest from the folder: `gitro-server.json` names the repository being served,
+   and a `help serve` request answers with the protocol. To an agent, for instance:
+
+   > This project's git repository is served read-only through gitro in `/mnt/exchange/myproject`, a folder you can write to.
+   > You have no access to the repository itself. To run a gitro command, write its arguments, one per line, to a new file in that folder,
+   > rename the file so its name ends in `.req`, then wait for the file with the same name ending in `.out`, read it and delete it.
+   > Start with `help serve`, then `help`, then `status --short --branch`.
+
+   Give the folder's path as the caller sees it: `D:\Exchange\myproject` on Windows can be `/mnt/d/Exchange/myproject` in WSL,
+   or wherever a container mounts it.
+4. **Watch it work.** The server's terminal logs one line per request, and the Run page shows each request with its response as it arrives.
+
+A caller that can see several request folders, such as `/mnt/exchange`, finds a repository's server by reading each folder's
+`gitro-server.json`. A server that isn't running answers nothing, so a caller should give up after a while and say so rather than wait.
+
+### A caller in a few lines
+
+A caller that runs scripts can keep one of these as a helper. Each sends one request, waits up to 20 seconds and returns the response,
+whose first line is `# gitro exit=<code>: <request>`.
+
+```bash
+# gitro_ask <folder> <command> [<arg>...]
+gitro_ask() {
+    local dir=$1 name=req-$$-$RANDOM i
+    shift
+    printf '%s\n' "$@" > "$dir/$name.tmp" && mv "$dir/$name.tmp" "$dir/$name.req" || return
+    for (( i = 0; i < 100; i++ )); do
+        if [[ -f $dir/$name.out ]]; then
+            cat "$dir/$name.out" && rm -f "$dir/$name.out"
+            return
+        fi
+        sleep 0.2
+    done
+    rm -f "$dir/$name.req"
+    echo "no answer: is gitro serve running for $dir?" >&2
+    return 1
+}
+```
+
+```python
+import os, time, uuid
+
+def gitro_ask(folder, *args):
+    """gitro_ask('/mnt/exchange/myproject', 'log', '--oneline', '-5')"""
+    name = os.path.join(folder, 'req-' + uuid.uuid4().hex)
+    with open(name + '.tmp', 'w', encoding='utf-8', newline='\n') as request:
+        request.write('\n'.join(args) + '\n')
+    os.replace(name + '.tmp', name + '.req')
+    for _ in range(100):
+        if os.path.exists(name + '.out'):
+            with open(name + '.out', encoding='utf-8', errors='replace') as response:
+                text = response.read()
+            os.remove(name + '.out')
+            return text
+        time.sleep(0.2)
+    raise TimeoutError('no answer: is gitro serve running for %s?' % folder)
+```
+
+```powershell
+# Invoke-Gitro D:\Exchange\myproject log, --oneline, -5
+function Invoke-Gitro([string]$Folder, [string[]]$Arguments) {
+    $name = Join-Path $Folder ('req-' + [guid]::NewGuid().ToString('N'))
+    # UTF-8 without a byte order mark, which gitro would read as part of the command.
+    [IO.File]::WriteAllText("$name.tmp", ($Arguments -join "`n") + "`n", [Text.UTF8Encoding]::new($false))
+    Move-Item -LiteralPath "$name.tmp" -Destination "$name.req"
+    for ($i = 0; $i -lt 100; $i++) {
+        if (Test-Path -LiteralPath "$name.out") {
+            $text = [IO.File]::ReadAllText("$name.out")
+            Remove-Item -LiteralPath "$name.out"
+            return $text
+        }
+        Start-Sleep -Milliseconds 200
+    }
+    throw "No answer: is gitro serve running for $Folder?"
+}
+```
+
 ## Browser UI
 
 ```bash

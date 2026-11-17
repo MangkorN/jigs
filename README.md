@@ -2,6 +2,8 @@
 
 Small, purpose-built tools for repetitive dev tasks: bash functions for Git Bash, PowerShell scripts for Visual Studio, and a shared bashrc.
 
+The [jigs site](https://mangkorn.github.io/jigs/) shows what each tool does, plays a demo of gitro, and runs gitro servers from your browser.
+
 ```
 bash/
   bashrc              aliases; sources everything in functions/
