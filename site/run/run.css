@@ -1,0 +1,207 @@
+/* Run page: connection status, the start form, and one panel per server with its requests. */
+
+/* STATUS WINDOW ======================================================================================================== */
+
+/* Always on the page, like a gauge on a panel: the lamp and title change in place as gitro ui comes and goes. */
+.connection { margin-bottom: 1.5rem; }
+
+.status-window {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.35rem 0.9rem;
+    background: var(--plate);
+    border: 1px solid var(--rule);
+    padding: 0.9rem 1.1rem 1rem;
+}
+.status-window h2 { font: 800 1.6rem/1.1 var(--font-display); margin: 0; }
+.status-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: flex-end; }
+.status-body { grid-column: 2 / -1; }
+.status-body p { margin: 0.2rem 0; max-width: var(--measure); }
+.status-body pre { margin: 0.5rem 0; display: inline-block; padding: 0.4rem 0.8rem; }
+.status-body .aside { color: var(--ink-soft); font-size: 0.92rem; }
+.status-body .found { margin-top: 0.6rem; display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
+
+/* An unlit lamp is a dark lens; a lit one glows in its signal color. */
+.lamp {
+    width: 1.3rem;
+    height: 1.3rem;
+    border-radius: 50%;
+    background: var(--rule);
+    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--ink) 18%, transparent);
+}
+.status-window[data-lamp='green'] .lamp { background: var(--green); box-shadow: 0 0 0 4px var(--green-soft); }
+.status-window[data-lamp='yellow'] .lamp { background: var(--yellow); box-shadow: 0 0 0 4px var(--yellow-soft); }
+.status-window[data-lamp='red'] .lamp { background: var(--red); box-shadow: 0 0 0 4px var(--red-soft); }
+.status-window[data-lamp='blue'] .lamp { background: var(--blue); box-shadow: 0 0 0 4px var(--blue-soft); }
+.status-window[data-lamp='green'] { border-left: 6px solid var(--green); }
+.status-window[data-lamp='yellow'] { border-left: 6px solid var(--yellow); }
+.status-window[data-lamp='red'] { border-left: 6px solid var(--red); }
+.status-window[data-lamp='blue'] { border-left: 6px solid var(--blue); }
+
+/* A yellow lamp means waiting, so it pulses while it waits. */
+@media (prefers-reduced-motion: no-preference) {
+    .status-window[data-lamp='yellow'] .lamp { animation: lamp-wait 1.4s ease-in-out infinite; }
+}
+@keyframes lamp-wait { 50% { opacity: 0.45; } }
+
+.status-facts {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 0.1rem 1rem;
+    margin: 0.2rem 0 0;
+    font-size: 0.92rem;
+}
+.status-facts dt { color: var(--ink-soft); }
+.status-facts dd { margin: 0; overflow-wrap: anywhere; }
+
+@media (max-width: 640px) {
+    .status-window { grid-template-columns: auto minmax(0, 1fr); }
+    .status-actions { grid-column: 1 / -1; grid-row: 3; justify-content: flex-start; }
+    .status-body { grid-column: 1 / -1; }
+}
+
+/* START FORM =========================================================================================================== */
+
+.start h2, .servers > h2 { margin-top: 0; }
+
+.start-form {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 0.6rem 1rem;
+    align-items: center;
+    max-width: 52rem;
+}
+.start-form label { font-weight: 700; }
+.start-form .hint, .start-form .start-actions { grid-column: 2; }
+.start-form .hint { margin: -0.2rem 0 0; color: var(--ink-soft); font-size: 0.9rem; }
+
+.path-field { display: flex; gap: 0.5rem; }
+.path-input { position: relative; flex: 1; min-width: 0; }
+
+/* Folder suggestions, under the path being typed. */
+.suggestions {
+    position: absolute;
+    z-index: 5;
+    top: calc(100% + 2px);
+    left: 0;
+    right: 0;
+    max-height: 18rem;
+    overflow-y: auto;
+    margin: 0;
+    padding: 0.2rem 0;
+    list-style: none;
+    max-width: none;
+    background: var(--plate);
+    border: 1px solid var(--rule-strong);
+    border-radius: 3px;
+    font: 0.9rem/1.3 var(--font-mono);
+}
+.suggestions li { display: flex; align-items: baseline; gap: 0.75rem; padding: 0.3rem 0.6rem; cursor: pointer; }
+.suggestions li[aria-selected='true'], .suggestions li[role='option']:hover { background: var(--blue-soft); }
+.suggestions .name { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.suggestions .tag { font: 700 0.75rem/1 var(--font-text); color: var(--green); }
+.suggestions li.more { cursor: default; color: var(--ink-soft); font: 0.82rem/1.3 var(--font-text); }
+
+.start-actions { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.form-error { color: var(--red); margin: 0; font-weight: 700; }
+.start-note { color: var(--ink-soft); margin: 0; }
+
+@media (max-width: 640px) {
+    .start-form { grid-template-columns: minmax(0, 1fr); }
+    .start-form .hint, .start-form .start-actions { grid-column: 1; }
+}
+
+.recent { margin-top: 1.25rem; max-width: 52rem; }
+.recent h3 { margin: 0 0 0.4rem; }
+.recent ul { list-style: none; padding: 0; margin: 0; max-width: none; }
+.recent li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.35rem 0;
+    border-top: 1px solid var(--rule);
+}
+.recent .paths { flex: 1; min-width: 0; font-family: var(--font-mono); font-size: 0.85rem; overflow-wrap: anywhere; }
+.recent .paths span { color: var(--ink-soft); }
+
+/* SERVERS ============================================================================================================== */
+
+.servers { margin-top: 2.5rem; display: grid; gap: 1.5rem; }
+.servers .empty { color: var(--ink-soft); margin: 0; }
+
+/* The left edge carries the server's state color. */
+.server {
+    background: var(--plate);
+    border: 1px solid var(--rule);
+    border-left: 6px solid var(--ink-soft);
+    padding: 1rem 1.25rem 1.25rem;
+}
+.server.running { border-left-color: var(--green); }
+.server.exited { border-left-color: var(--red); }
+
+.server-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem 1rem; }
+.server-head h3 { font: 800 1.8rem/1 var(--font-display); margin: 0; }
+.server-head .title-folder { margin-left: 0.6rem; font: 0.9rem/1 var(--font-mono); color: var(--ink-soft); }
+.server-head .actions { margin-left: auto; display: flex; gap: 0.4rem; }
+
+.server-paths {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 0.1rem 1rem;
+    margin: 0.6rem 0 1rem;
+    font-size: 0.9rem;
+}
+.server-paths dt { color: var(--ink-soft); }
+.server-paths dd { margin: 0; overflow-wrap: anywhere; }
+
+.exit-reason { color: var(--red); font: 0.88rem/1.4 var(--font-mono); margin: -0.4rem 0 0.9rem; overflow-wrap: anywhere; }
+
+.send { display: flex; gap: 0.5rem; max-width: 46rem; }
+.send-error { color: var(--red); margin: 0.4rem 0 0; font-size: 0.9rem; min-height: 1.2em; }
+
+.quick { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin: 0.2rem 0 1rem; font-size: 0.9rem; }
+.quick button { font: 0.82rem/1.2 var(--font-mono); padding: 0.25rem 0.5rem; }
+
+/* REQUESTS ============================================================================================================= */
+
+.requests { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+.requests th { text-align: left; font-weight: 700; color: var(--ink-soft); padding: 0.3rem 0.5rem; border-bottom: 1px solid var(--rule); }
+.requests td { padding: 0.35rem 0.5rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+.requests td.time { white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--ink-soft); }
+.requests td.exit { font-variant-numeric: tabular-nums; }
+.requests td.exit.failed { color: var(--red); font-weight: 700; }
+.requests td.from { white-space: nowrap; color: var(--ink-soft); }
+
+.requests button.request {
+    font: 0.9rem/1.35 var(--font-mono);
+    background: none;
+    border: 0;
+    padding: 0;
+    color: var(--blue);
+    text-align: left;
+    overflow-wrap: anywhere;
+}
+.requests button.request:hover { text-decoration: underline; }
+.requests tr.new td { background: var(--yellow-soft); transition: background 1.2s ease-out; }
+
+.requests td.answer { padding: 0 0.5rem 0.75rem; }
+.answer pre { margin: 0.25rem 0 0; max-height: 28rem; font-size: 0.82rem; }
+.answer .line-head { color: var(--ink-soft); }
+.answer .line-add { color: var(--green); }
+.answer .line-del { color: var(--red); }
+.answer .line-hunk { color: var(--blue); }
+
+.no-requests { color: var(--ink-soft); margin: 0.5rem 0 0; }
+
+.server-output { margin-top: 1rem; }
+.server-output summary { cursor: pointer; color: var(--ink-soft); }
+.server-output pre { font-size: 0.82rem; max-height: 16rem; }
+
+@media (max-width: 640px) {
+    .requests td.from, .requests th.from { display: none; }
+}
+
+/* EXPLAINER ============================================================================================================ */
+
+.explainer { margin-top: 3rem; border-top: 1px solid var(--rule); }

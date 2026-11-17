@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Run gitro | jigs</title>
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="run.css">
+<script src="../assets/site.js"></script>
+</head>
+<body data-page="run">
+<main class="page">
+    <section class="plate" aria-labelledby="title">
+        <div>
+            <h1 id="title">Run gitro</h1>
+            <p class="job">Serve repositories to callers that can only reach a folder, and watch every request.</p>
+        </div>
+        <dl>
+            <dt>Start with</dt><dd><code>gitro ui</code></dd>
+            <dt>Runs on</dt><dd>Windows, macOS, Linux</dd>
+            <dt>Companion</dt><dd><code>powershell/gitro-ui.ps1</code>, <code>python/gitro-ui.py</code></dd>
+        </dl>
+    </section>
+
+    <section id="connection" class="connection" aria-live="polite"></section>
+
+    <section id="start" class="start" aria-labelledby="start-title">
+        <h2 id="start-title">Start a server</h2>
+        <form id="start-form" class="start-form" autocomplete="off">
+            <label for="repo">Repository</label>
+            <div class="path-field">
+                <span class="path-input"><input type="text" id="repo" spellcheck="false"></span>
+                <button type="button" class="browse" data-for="repo" hidden>Browse</button>
+            </div>
+            <label for="dir">Request folder</label>
+            <div class="path-field">
+                <span class="path-input"><input type="text" id="dir" spellcheck="false"></span>
+                <button type="button" class="browse" data-for="dir" hidden>Browse</button>
+            </div>
+            <p class="hint">Callers write requests here and read the answers. gitro creates the folder if it doesn't exist.
+                Keep it outside the repository: callers need only this folder. <span id="path-forms"></span>
+                Typing a path suggests its folders: Tab or Enter takes one.</p>
+            <div class="start-actions">
+                <button type="submit" class="primary" id="start-button">Start server</button>
+                <p id="start-note" class="start-note"></p>
+                <p id="start-error" class="form-error" role="alert"></p>
+            </div>
+        </form>
+        <div id="recent" class="recent"></div>
+    </section>
+
+    <section id="servers" class="servers" aria-label="Servers"></section>
+
+    <section class="explainer" aria-labelledby="how-title">
+        <h2 id="how-title">How this page reaches your machine</h2>
+        <p><code>gitro ui</code> starts a small companion process on your computer, in the background, and opens this page.
+            It listens on 127.0.0.1 only, and answers only pages opened from a file or from the hosted site,
+            and only with its token. It can do one thing: run gitro.
+            On Windows it's a PowerShell script; on macOS and Linux it needs Python 3.</p>
+        <p>While it runs, it writes its port and token to <code>.gitro-ui/session.js</code> in your clone.
+            This page, opened from the clone, reads that file every couple of seconds, which is how it connects by itself.
+            The hosted page can't read your files, so <code>gitro ui -o hosted</code> opens it with a link that carries the token.</p>
+        <p>Each server it starts is <code>gitro serve -k</code>, which keeps a copy of every response for an hour.
+            That's how this page can show you what a caller asked and what it got back, even after the caller has
+            collected its answer.</p>
+        <p>Stopping the companion, with <code>gitro ui stop</code> or the button above, stops every server it started.
+            A server also stops on its own if the companion is closed or crashes.</p>
+    </section>
+</main>
+<script src="../data/gitro-demo.js"></script>
+<script src="run.js"></script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>jigs</title>
+<link rel="stylesheet" href="assets/site.css">
+<link rel="stylesheet" href="home.css">
+<script src="assets/site.js"></script>
+</head>
+<body data-page="home">
+<main class="page">
+    <section class="plate" aria-labelledby="title">
+        <div>
+            <h1 id="title">jigs</h1>
+            <p class="job">Small, purpose-built tools for repetitive dev tasks.</p>
+        </div>
+        <dl>
+            <dt>Shell</dt><dd>bash (Git Bash on Windows)</dd>
+            <dt>Also</dt><dd>PowerShell, Python 3</dd>
+            <dt>Source</dt><dd><a href="https://github.com/MangkorN/jigs">MangkorN/jigs</a></dd>
+        </dl>
+    </section>
+
+    <p class="lead">A jig is a guide a woodworker builds once so the same cut comes out exact every time.
+        These are the software kind: each one does a single repetitive job and gets the fiddly details right,
+        so you don't have to think about them again.</p>
+
+    <h2>gitro</h2>
+    <p>Read-only git for callers that shouldn't touch your repository, such as an AI agent working in a sandbox.
+        The caller drops a request file into a folder, and gitro answers with the output of an allow-listed,
+        read-only git command. The caller never gets the repository itself.</p>
+    <p><a class="button" href="run/">Run gitro</a></p>
+
+    <h2>The other tools</h2>
+    <p>Each one is documented in the README for now.</p>
+    <dl class="tools">
+        <dt><a href="https://github.com/MangkorN/jigs#csbundle">csbundle</a></dt>
+        <dd>Bundles a source tree's C# files into one text file per folder, ready to hand to a chat.</dd>
+        <dt><a href="https://github.com/MangkorN/jigs#csapply">csapply</a></dt>
+        <dd>Puts edited files back into a project by matching file names, leaving Unity's .meta files alone.</dd>
+        <dt><a href="https://github.com/MangkorN/jigs#gdm">gdm</a></dt>
+        <dd>Shows a git diff as only the lines that changed.</dd>
+        <dt><a href="https://github.com/MangkorN/jigs#lsf--catcs">lsf, catcs</a></dt>
+        <dd>List every file under a folder, or print its C# files, optionally straight to the clipboard.</dd>
+        <dt><a href="https://github.com/MangkorN/jigs#toclip">toclip</a></dt>
+        <dd>Copies any command's output to the clipboard.</dd>
+        <dt><a href="https://github.com/MangkorN/jigs#vs-tabs-powershell">vs-tabs</a></dt>
+        <dd>Saves and restores Visual Studio tab layouts by name.</dd>
+    </dl>
+</main>
+</body>
+</html>

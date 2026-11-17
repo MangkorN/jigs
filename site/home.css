@@ -1,0 +1,17 @@
+/* Overview page. */
+
+.lead { font-size: 1.15rem; }
+
+.tools {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 0.5rem 1.5rem;
+    max-width: 52rem;
+}
+.tools dt { font-family: var(--font-mono); font-weight: 700; }
+.tools dd { margin: 0; }
+
+@media (max-width: 640px) {
+    .tools { grid-template-columns: minmax(0, 1fr); gap: 0.1rem; }
+    .tools dd { margin-bottom: 0.6rem; }
+}
