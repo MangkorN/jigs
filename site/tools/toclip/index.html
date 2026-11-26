@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>toclip | jigs</title>
+<link rel="stylesheet" href="../../assets/site.css">
+<link rel="stylesheet" href="../tools.css">
+<script src="../../data/docs.js"></script>
+<script src="../../assets/site.js"></script>
+</head>
+<!-- Written by site/data/make-docs.py from docs/toclip.md. Edit that page, then run it again. -->
+<body data-page="tool-toclip">
+<main class="page tool">
+    <section class="plate" aria-labelledby="title">
+        <div>
+            <h1 id="title">toclip</h1>
+            <p class="job">Runs a command and copies its output to the clipboard.</p>
+        </div>
+        <dl>
+            <dt>Kind</dt><dd>Bash function</dd>
+            <dt>Script</dt><dd><a href="https://github.com/MangkorN/jigs/blob/main/bash/functions/toclip.sh"><code>bash/functions/toclip.sh</code></a></dd>
+            <dt>Page</dt><dd><a href="https://github.com/MangkorN/jigs/blob/main/docs/toclip.md"><code>docs/toclip.md</code></a></dd>
+        </dl>
+    </section>
+
+    <article class="doc">
+<pre data-language="bash"><code>toclip &lt;command&gt; [&lt;args&gt;...]</code></pre>
+<p>UTF-8 safe, via <code>/dev/clipboard</code>. If the command fails, the clipboard is left untouched.</p>
+<h2 id="why-not-clipexe">Why not <code>clip.exe</code></h2>
+<p>Windows' <code>clip.exe</code> also takes piped output (<code>git log --oneline -5 | clip</code>), but differs in three ways:</p>
+<ul>
+<li><strong>Non-ASCII text:</strong> <code>clip.exe</code> reads piped bytes in a legacy code page, not as UTF-8, so accented letters, CJK text, emoji and box-drawing characters paste as mojibake (<code>é</code> becomes <code>Ã©</code> or <code>├⌐</code>, depending on the code page). <code>toclip</code> writes through Git Bash's <code>/dev/clipboard</code>, which stores the text as Unicode.</li>
+<li><strong>Failed commands:</strong> in <code>command | clip</code>, <code>clip.exe</code> runs regardless, so a failed or interrupted command replaces the clipboard with partial or empty output, and the pipeline reports success. <code>toclip</code> copies only if the command succeeds; otherwise it leaves the clipboard as it was and returns the command's exit code.</li>
+<li><strong>Feedback:</strong> <code>toclip</code> prints what it copied on stderr, such as <code>git: copied 12 lines to clipboard</code>. <code>clip.exe</code> prints nothing.</li>
+</ul>
+    </article>
+</main>
+</body>
+</html>

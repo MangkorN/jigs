@@ -1,15 +1,13 @@
 <#
 .SYNOPSIS
-    Thin wrapper around vs-tabs.ps1 that fills in the solution location automatically
-    for this repo, so you never have to pass it by hand.
-    Snapshots are stored in this script's folder unless -LayoutsDir is given.
+    Wrapper around vs-tabs.ps1 that finds the project's solution one folder up,
+    so it doesn't need to be given. Copy it into a folder below the project root
+    and rename it as you like. Snapshots are stored in this script's folder
+    unless -LayoutsDir is given.
 
     Requires the JIGS_DIR environment variable to point at the jigs clone.
-    If PowerShell refuses to run this script, see the "Execution policy"
-    section of the jigs README: https://github.com/MangkorN/jigs#execution-policy
-
-    The "pq-" prefix stands for PiQuest, the project this wrapper
-    was originally written for.
+    If PowerShell refuses to run this script, see "Execution policy" in the
+    jigs README: https://github.com/MangkorN/jigs#execution-policy
 
 .EXAMPLE
     .\pq-tabs.ps1
@@ -58,9 +56,8 @@ if (-not $env:JIGS_DIR) {
 }
 if (-not $LayoutsDir) { $LayoutsDir = $PSScriptRoot }
 
-# One level above this folder is the Unity project root, where the sln lives.
-# No filesystem check or Help special-casing needed here - vs-tabs.ps1's own
-# -SolutionDir lookup and its Help short-circuit already cover both.
+# One level above this folder is the project root, where the .sln lives. vs-tabs.ps1 finds it there,
+# and shows its help without needing one.
 & (Join-Path $env:JIGS_DIR 'powershell\vs-tabs.ps1') `
     -Action $Action -Name $Name -SolutionDir (Split-Path $PSScriptRoot -Parent) `
     -LayoutsDir $LayoutsDir

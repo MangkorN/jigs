@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>csbundle | jigs</title>
+<link rel="stylesheet" href="../../assets/site.css">
+<link rel="stylesheet" href="../tools.css">
+<script src="../../data/docs.js"></script>
+<script src="../../assets/site.js"></script>
+</head>
+<!-- Written by site/data/make-docs.py from docs/csbundle.md. Edit that page, then run it again. -->
+<body data-page="tool-csbundle">
+<main class="page tool">
+    <section class="plate" aria-labelledby="title">
+        <div>
+            <h1 id="title">csbundle</h1>
+            <p class="job">Bundles the <code>.cs</code> files of a source tree into one text file per folder, named by the folder's relative path.</p>
+        </div>
+        <dl>
+            <dt>Kind</dt><dd>Bash function</dd>
+            <dt>Script</dt><dd><a href="https://github.com/MangkorN/jigs/blob/main/bash/functions/csbundle.sh"><code>bash/functions/csbundle.sh</code></a></dd>
+            <dt>Page</dt><dd><a href="https://github.com/MangkorN/jigs/blob/main/docs/csbundle.md"><code>docs/csbundle.md</code></a></dd>
+        </dl>
+    </section>
+
+    <article class="doc">
+<pre data-language="bash"><code>csbundle [-p &lt;prefix&gt;] [-o &lt;outdir&gt;] [-d &lt;depth&gt;] [-n] [&lt;srcdir&gt;]</code></pre>
+<p>Concatenates the <code>.cs</code> files of each directory under <code>&lt;srcdir&gt;</code> into one <code>.txt</code> per directory, named by relative path (<code>Root.txt</code>, <code>Root_Drivers.txt</code>, <code>Root_Settings_SubSettings.txt</code>, ...). Output defaults to <code>~/cs_bundles/&lt;srcdir name&gt;/</code>. Each file is preceded by a <code>// ===== path =====</code> header unless <code>-n</code> is given.</p>
+<p>With <code>-d &lt;depth&gt;</code>, directories at that depth (<code>&lt;srcdir&gt;</code> is 0) also absorb everything beneath them, which caps the number of bundles. <code>-d 0</code> produces a single file.</p>
+    </article>
+</main>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>jigs</title>
+<link rel="stylesheet" href="assets/site.css">
+<link rel="stylesheet" href="home.css">
+<script src="data/docs.js"></script>
+<script src="assets/site.js"></script>
+</head>
+<body data-page="home">
+<main class="page">
+    <section class="plate" aria-labelledby="title">
+        <div>
+            <h1 id="title">jigs</h1>
+            <p class="job">Small, purpose-built tools for repetitive dev tasks.</p>
+        </div>
+        <dl>
+            <dt>Shell</dt><dd>bash (Git Bash on Windows)</dd>
+            <dt>Also</dt><dd>PowerShell, Python 3</dd>
+            <dt>Source</dt><dd><a href="https://github.com/MangkorN/jigs">MangkorN/jigs</a></dd>
+        </dl>
+    </section>
+
+    <p class="lead">A jig is a woodworking guide for making the same cut accurately every time. Each tool here does one
+        repetitive dev job and handles the details that make it error-prone, such as Unity <code>.meta</code> files,
+        byte order marks, line endings and clipboard encoding.</p>
+
+    <section class="feature" aria-labelledby="gitro-title">
+        <h2 id="gitro-title">gitro</h2>
+        <p>Read-only git access for programs that shouldn't touch your repository, such as an AI agent in a sandbox.
+            The program writes a request into a shared folder, and gitro answers with the output of an allow-listed
+            git command. The program never gets the repository, its credentials or any way to change it.</p>
+        <p class="actions"><a class="button primary" href="tools/gitro/">Read the guide</a>
+            <a class="button" href="gitro/read-only/">See what it refuses</a>
+            <a class="button" href="run/">Run gitro</a></p>
+    </section>
+
+    <h2>All tools</h2>
+    <dl class="tools">
+        <!-- tools:start: written by site/data/make-docs.py from docs/ -->
+        <dt><a href="tools/lsf/">lsf</a> <span class="kind">bash</span></dt>
+        <dd>Lists every file under a folder as sorted relative paths, leaving out Unity's <code>.meta</code> files.</dd>
+        <dt><a href="tools/catcs/">catcs</a> <span class="kind">bash</span></dt>
+        <dd>Prints the contents of every <code>.cs</code> file in a folder (not its subfolders), with UTF-8 byte order marks stripped.</dd>
+        <dt><a href="tools/toclip/">toclip</a> <span class="kind">bash</span></dt>
+        <dd>Runs a command and copies its output to the clipboard.</dd>
+        <dt><a href="tools/csbundle/">csbundle</a> <span class="kind">bash</span></dt>
+        <dd>Bundles the <code>.cs</code> files of a source tree into one text file per folder, named by the folder's relative path.</dd>
+        <dt><a href="tools/csapply/">csapply</a> <span class="kind">bash</span></dt>
+        <dd>Overwrites files in a project with same-named files from a flat folder, keeping their Unity <code>.meta</code> files, byte order marks and line endings.</dd>
+        <dt><a href="tools/gdm/">gdm</a> <span class="kind">bash</span></dt>
+        <dd>Runs <code>git diff</code> showing only added and removed lines, with file headers but no context lines or hunk headers.</dd>
+        <dt><a href="tools/gitro/">gitro</a> <span class="kind">bash</span></dt>
+        <dd>Runs read-only git commands from a fixed menu. <code>gitro serve</code> answers them through a shared folder, so a program without access to the repository, such as an AI agent in a sandbox, can still inspect it.</dd>
+        <dt><a href="tools/vs-tabs/">vs-tabs</a> <span class="kind">PowerShell</span></dt>
+        <dd>Saves and restores Visual Studio 2022 (17.9+) document tab layouts by name.</dd>
+        <!-- tools:end -->
+    </dl>
+
+    <h2>Install</h2>
+    <p>jigs is a folder you clone, then load from your shell's startup file. In Git Bash:</p>
+    <pre><code>git clone https://github.com/MangkorN/jigs /d/Repos/jigs
+echo 'source /d/Repos/jigs/bash/bashrc' &gt;&gt; ~/.bashrc</code></pre>
+    <p>New terminals pick the tools up. The <a href="https://github.com/MangkorN/jigs#install">README</a> also covers
+        the PowerShell scripts and Windows' execution policy.</p>
+</main>
+</body>
+</html>

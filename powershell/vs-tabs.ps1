@@ -4,8 +4,8 @@
     via the solution's DocumentLayout.json.
 
 .PARAMETER Action
-    Save, Load, List, View, or Help (default). Help prints common
-    commands plus the execution-policy fix, with no solution required.
+    Save, Load, List, View, or Help (default). Help prints the usage,
+    with no solution required.
     View is read-only: bare, it shows the live DocumentLayout.json;
     with -Name, it shows a stored snapshot's contents without loading it.
     Positional, so the -Action flag can be omitted.
@@ -20,10 +20,9 @@
     exists in the current directory (or in -SolutionDir, if given).
 
 .PARAMETER SolutionDir
-    Directory to search for a single .sln in, instead of the current
-    directory. Ignored if -SolutionPath is given. Exists so wrapper scripts
-    can point at a fixed directory without doing their own filesystem
-    search (and duplicating this script's Help short-circuit) to do it.
+    Folder to search for a single .sln in, instead of the current folder,
+    for wrapper scripts that know the folder but not the file name.
+    Ignored if -SolutionPath is given.
 
 .PARAMETER LayoutsDir
     Where named snapshots are stored. Defaults to the folder the script
@@ -95,100 +94,38 @@ $ErrorActionPreference = 'Stop'
 
 function Show-Help {
     @"
-vs-tabs.ps1 - save/restore named VS document-tab layouts (requires VS 17.9+)
+usage: .\vs-tabs.ps1 [-Action] <action> [[-Name] <snapshot>]
+                     [-SolutionPath <sln>] [-SolutionDir <folder>]
+                     [-LayoutsDir <folder>]
 
-COMMANDS
+Save and restore Visual Studio 2022 (17.9+) document tab layouts by name.
 
-  .\vs-tabs.ps1                                     Show this help (default action)
-  .\vs-tabs.ps1 -Action List
-  .\vs-tabs.ps1 -Action View
-  .\vs-tabs.ps1 -Action View -Name <snapshot-name>
-  .\vs-tabs.ps1 -Action Save -Name <snapshot-name>
-  .\vs-tabs.ps1 -Action Load -Name <snapshot-name>
+actions
+   list            list saved snapshots
+   view            show the current layout's documents (what save would keep)
+   view <name>     show a snapshot's documents without loading it
+   save <name>     save the current layout as <name>
+   load <name>     replace the current layout with <name>
+   help            show this help (the default)
 
-  Action and Name are positional, so the flags can be dropped:
+options
+   -SolutionPath <sln>     the .sln file, if the current folder doesn't hold
+                           exactly one
+   -SolutionDir <folder>   folder to find a single .sln in, instead of the
+                           current one
+   -LayoutsDir <folder>    where snapshots are kept (default: this script's
+                           folder)
 
-    .\vs-tabs.ps1 list
-    .\vs-tabs.ps1 save <snapshot-name>
+Close Visual Studio before save and load. It writes the layout when it exits,
+so save captures the tabs as of its last exit, and a load done while it's open
+is overwritten when it exits.
 
-  Add -SolutionPath <path\to.sln> if the current directory doesn't contain
-  exactly one .sln. Add -LayoutsDir <path> to store/read snapshots somewhere
-  other than the script's own folder (the default).
+examples
+   .\vs-tabs.ps1 save combat-refactor
+   .\vs-tabs.ps1 load combat-refactor -SolutionPath D:\Repos\MyGame\MyGame.sln
 
-  Save and Load both only work correctly with VS fully closed - see the
-  note at the end of this section before running either.
-
-WHEN TO ADD -SolutionPath
-
-  Needed if you're not running from a folder containing exactly one .sln -
-  e.g. running from a subfolder, or the repo has more than one .sln.
-
-    .\vs-tabs.ps1 -Action List -SolutionPath D:\Repos\PiQuest-Unity\PiQuest.sln
-    .\vs-tabs.ps1 -Action Save -Name combat-refactor -SolutionPath D:\Repos\PiQuest-Unity\PiQuest.sln
-    .\vs-tabs.ps1 -Action Load -Name combat-refactor -SolutionPath D:\Repos\PiQuest-Unity\PiQuest.sln
-
-  -SolutionDir <folder> is the same idea but searches a folder for a single
-  .sln instead of naming the file directly - useful for wrapper scripts that
-  know the folder but not the filename.
-
-WHEN TO ADD -LayoutsDir
-
-  Needed only if you want snapshots stored somewhere other than the script's
-  own folder - e.g. a shared drive.
-
-    .\vs-tabs.ps1 -Action Save -Name combat-refactor -LayoutsDir D:\Shared\VSLayouts
-    .\vs-tabs.ps1 -Action Load -Name combat-refactor -LayoutsDir D:\Shared\VSLayouts
-    .\vs-tabs.ps1 -Action List -LayoutsDir D:\Shared\VSLayouts
-
-  The two combine independently - use both if you need them at once:
-
-    .\vs-tabs.ps1 -Action Load -Name combat-refactor -SolutionPath D:\Repos\PiQuest-Unity\PiQuest.sln -LayoutsDir D:\Shared\VSLayouts
-
-  VS MUST BE FULLY CLOSED for both Save and Load - not just the solution
-  minimized or idle, actually exited:
-
-  - Save only captures state as of the last time VS closed - opening or
-    closing tabs does not flush it live, so if VS is still open, Save
-    captures whatever was open the last time it was closed, not your
-    current tabs. Close VS first if you need current tabs, then Save.
-
-  - Load only takes effect if VS was already closed before you ran it. If
-    VS is open when you run Load, VS still holds its old state in memory,
-    and closing VS afterward makes VS write that old state back over what
-    Load just applied - silently undoing it. Close VS first, then Load,
-    then reopen VS to see the result.
-
-EXECUTION POLICY
-
-  Two distinct gates can block this script; check which error you're seeing.
-
-  Scenario A: "running scripts is disabled on this system"
-  All scripts are blocked outright. Check which scope is enforcing it:
-
-    Get-ExecutionPolicy -List
-
-  If MachinePolicy/UserPolicy show Undefined (no GPO lock), fix it once,
-  no admin rights needed:
-
-    Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
-
-  If MachinePolicy/UserPolicy are set by a GPO, that fix won't take. Bypass
-  per-invocation instead:
-
-    powershell -ExecutionPolicy Bypass -File .\vs-tabs.ps1 -Action List
-
-  Scenario B: "is not digitally signed. You cannot run this script"
-  RemoteSigned is already active and correctly enforced. This specific file
-  carries a "downloaded from another computer" tag - Windows adds this to
-  any file that arrives via a browser, email client, or file-sharing tool -
-  and isn't signed, so it's blocked regardless of the policy already being
-  RemoteSigned. Re-running Set-ExecutionPolicy won't fix this; strip the
-  tag instead:
-
-    Unblock-File .\vs-tabs.ps1
-
-  This is a per-file flag, not a one-time global fix - it reappears on any
-  fresh copy of the script obtained the same way.
+If PowerShell refuses to run this script, see "Execution policy" in the jigs
+README. 'Get-Help .\vs-tabs.ps1 -Examples' shows more examples.
 "@ | Write-Host
 }
 

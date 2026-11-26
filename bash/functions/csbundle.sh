@@ -6,6 +6,7 @@ csbundle()
 {
     local prefix="Root" out="" headers=1 maxdepth=-1
     local opt OPTIND=1
+    [[ $1 == --help ]] && set -- -h
     while getopts ":p:o:d:nh" opt; do
         case $opt in
             p) prefix=$OPTARG ;;
@@ -14,17 +15,22 @@ csbundle()
                maxdepth=$OPTARG ;;
             n) headers=0 ;;
             h) cat <<'USAGE'
-usage: csbundle [-p prefix] [-o outdir] [-d depth] [-n] [srcdir]
-  srcdir     root of the tree to bundle (default: .)
-  -p prefix  name of the root bundle and prefix for the rest (default: Root)
-  -o outdir  output directory (default: ~/cs_bundles/<srcdir name>)
-  -d depth   deepest directory level that gets its own bundle (srcdir is 0);
-             deeper directories are merged into their ancestor at that level
-  -n         omit the per-file path header comments
+usage: csbundle [-p <prefix>] [-o <outdir>] [-d <depth>] [-n] [<srcdir>]
+
+Concatenate the .cs files of each directory under <srcdir> (default: .) into
+one .txt per directory, named by its relative path: Root.txt, Root_Drivers.txt,
+Root_Settings_SubSettings.txt, ... Earlier bundles with the same prefix in
+<outdir> are replaced.
+
+   -p <prefix>   root bundle's name and the others' prefix (default: Root)
+   -o <outdir>   output directory (default: ~/cs_bundles/<srcdir name>)
+   -d <depth>    deepest level with a bundle of its own (<srcdir> is 0); deeper
+                 directories go into their ancestor's bundle
+   -n            leave out the path header before each file
 USAGE
                return 0 ;;
-            :)  echo "csbundle: -$OPTARG needs an argument" >&2; return 2 ;;
-            \?) echo "csbundle: unknown option -$OPTARG" >&2; return 2 ;;
+            :)  echo "csbundle: -$OPTARG needs an argument. See 'csbundle -h'." >&2; return 2 ;;
+            \?) echo "csbundle: unknown option '-$OPTARG'. See 'csbundle -h'." >&2; return 2 ;;
         esac
     done
     shift $((OPTIND - 1))

@@ -1,7 +1,16 @@
-# gdm: git diff showing only the changed lines (no context, no hunk headers).
+# gdm: git diff showing only the changed lines, with file headers but no context lines or hunk headers.
 # Accepts any git diff arguments.
 gdm()
 {
+  if [[ $1 == -h || $1 == --help ]]; then
+    cat <<'USAGE'
+usage: gdm [<git diff options>] [<commit>...] [-- <path>...]
+
+Show git diff with only the added and removed lines, keeping file headers but
+no context lines or hunk headers. Takes any git diff arguments.
+USAGE
+    return 0
+  fi
   local c=never
   [ -t 1 ] && c=always
   git diff --unified=0 --color="$c" "$@" | awk '

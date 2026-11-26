@@ -1,0 +1,150 @@
+/* gitro pages: the ledger of attempts on "Read-only is harder than it looks", and the session player on
+   "Agents and other callers". Red marks what plain git did, green what gitro did instead. */
+
+.gitro-page > section { max-width: 60rem; }
+.gitro-page .plate h1 { font-size: clamp(2.2rem, 4.6vw, 3.3rem); }
+.gitro-page .lead { font-size: 1.12rem; max-width: var(--measure); }
+.gitro-page h2 { scroll-margin-top: 1rem; }
+.gitro-page .actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin: 1.2rem 0 0; }
+.gitro-page .sources { font-size: 0.9rem; color: var(--ink-soft); }
+
+/* FILTERS ============================================================================================================== */
+
+.filters { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 1rem 0 1.2rem; }
+.filters button { font-weight: 400; }
+.filters button[aria-pressed='true'] { background: var(--ink); border-color: var(--ink); color: var(--plate); font-weight: 700; }
+.filters .count { margin-left: 0.35rem; opacity: 0.7; font-size: 0.85em; }
+
+/* LEDGER =============================================================================================================== */
+
+.ledger { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; }
+
+.attempt {
+    background: var(--plate);
+    border: 1px solid var(--rule);
+    padding: 0.9rem 1.1rem 0.8rem;
+    scroll-margin-top: 1rem;
+}
+.attempt:target { border-color: var(--ink); box-shadow: 0 0 0 1px var(--ink); }
+.attempt header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.2rem 1rem; }
+.attempt h3 { margin: 0; font-size: 1.15rem; }
+.attempt h3 a { color: inherit; text-decoration: none; }
+.attempt h3 a:hover { text-decoration: underline; }
+.attempt .kind { font-size: 0.85rem; color: var(--ink-soft); }
+.attempt .about { margin: 0.35rem 0 0.2rem; }
+.attempt .setup { margin: 0 0 0.2rem; font-size: 0.9rem; color: var(--ink-soft); }
+
+/* The request, one numbered line per step when it takes more than one. */
+.request {
+    list-style: none;
+    margin: 0.6rem 0 0.8rem;
+    padding: 0.5rem 0.8rem;
+    background: var(--code-bg);
+    border-radius: 3px;
+    font: 0.88rem/1.5 var(--font-mono);
+    overflow-x: auto;
+    max-width: none;
+}
+.request li { white-space: pre; }
+.request .step { color: var(--ink-soft); margin-right: 0.8rem; user-select: none; }
+
+.outcomes { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0.8rem; }
+.outcome { border-top: 3px solid var(--rule); padding-top: 0.45rem; }
+.outcome.git { border-top-color: var(--red); }
+.outcome.gitro { border-top-color: var(--green); }
+.outcome h4 { margin: 0 0 0.3rem; font: 700 1rem/1.2 var(--font-display); letter-spacing: 0.04em; }
+.outcome ul { list-style: none; margin: 0; padding: 0; }
+.outcome li { display: flex; gap: 0.5rem; margin: 0.2rem 0; font-size: 0.95rem; }
+.outcome li::before { content: ''; flex: none; width: 0.6rem; height: 0.6rem; margin-top: 0.45em; border-radius: 50%; }
+.outcome.git li::before { background: var(--red); }
+.outcome.gitro li::before { background: var(--green); }
+.outcome li .step { color: var(--ink-soft); font-family: var(--font-mono); font-size: 0.85rem; }
+.outcome li code { font-size: 0.85em; }
+
+.attempt details { margin-top: 0.6rem; }
+.attempt summary { cursor: pointer; color: var(--blue); font-size: 0.92rem; }
+.outputs { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0.8rem; margin-top: 0.5rem; }
+.outputs h5 { margin: 0.4rem 0 0.2rem; font-size: 0.85rem; color: var(--ink-soft); font-weight: 700; }
+.outputs pre { margin: 0; font-size: 0.78rem; max-height: 18rem; }
+
+@media (max-width: 760px) {
+    .outcomes, .outputs { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* SAFEGUARDS =========================================================================================================== */
+
+.safeguards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.4rem 2rem; }
+.safeguards h3 { margin: 1rem 0 0.3rem; }
+.safeguards p { margin: 0; font-size: 0.97rem; }
+@media (max-width: 760px) { .safeguards { grid-template-columns: minmax(0, 1fr); } }
+
+.points li { margin: 0.45rem 0; }
+
+/* SESSION PLAYER ======================================================================================================= */
+
+.player {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    border: 2px solid var(--rule-strong);
+    background: var(--plate);
+}
+.player-controls {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 0.9rem;
+    border-bottom: 1px solid var(--rule);
+}
+.player-controls .progress { margin-left: auto; font-size: 0.85rem; color: var(--ink-soft); }
+
+.pane { padding: 0.8rem 1rem 1rem; min-height: 26rem; max-height: 40rem; overflow-y: auto; }
+.pane h3 { margin: 0 0 0.6rem; font: 700 1.05rem/1.2 var(--font-display); color: var(--ink-soft); letter-spacing: 0.04em; }
+.pane.folder { border-left: 1px solid var(--rule); background: var(--steel); }
+
+.turn { margin: 0 0 0.8rem; max-width: 46rem; }
+.turn .who { display: block; font-size: 0.8rem; font-weight: 700; color: var(--ink-soft); margin-bottom: 0.15rem; }
+.turn .says { margin: 0; padding: 0.5rem 0.75rem; border-radius: 3px; background: var(--steel); }
+.turn.person .says { background: var(--blue-soft); }
+.turn .says p { margin: 0.2rem 0; }
+
+/* What the agent did: the request it wrote, and the answer it read. */
+.action { margin: 0 0 0.8rem 1rem; border-left: 3px solid var(--rule); padding-left: 0.7rem; }
+.action .wrote { font-size: 0.85rem; color: var(--ink-soft); margin: 0 0 0.2rem; }
+.action .wrote code { color: var(--ink); }
+.action pre { margin: 0.3rem 0 0; font-size: 0.78rem; max-height: 12rem; }
+.action.refused { border-left-color: var(--red); }
+.action.answered { border-left-color: var(--green); }
+
+.files { list-style: none; margin: 0 0 1rem; padding: 0; font: 0.85rem/1.5 var(--font-mono); }
+.files li { display: flex; align-items: center; gap: 0.5rem; padding: 0.15rem 0.3rem; }
+.files li::before { content: ''; flex: none; width: 0.55rem; height: 0.55rem; border-radius: 50%; background: var(--rule); }
+.files li[data-state='writing']::before, .files li[data-state='working']::before { background: var(--yellow); }
+.files li[data-state='live']::before { background: var(--green); box-shadow: 0 0 0 3px var(--green-soft); }
+.files li[data-state='waiting']::before { background: var(--blue); }
+.files li[data-state='answered']::before { background: var(--green); }
+.files li > span:first-of-type { white-space: nowrap; }
+.files li .note { font-family: var(--font-text); color: var(--ink-soft); font-size: 0.8rem; }
+.files .empty { color: var(--ink-soft); font-family: var(--font-text); }
+.files .empty::before { display: none; }
+
+.server-log { margin: 0; font-size: 0.75rem; min-height: 4rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+@media (prefers-reduced-motion: no-preference) {
+    .files li, .turn, .action { animation: arrive 0.25s ease-out; }
+}
+@keyframes arrive { from { opacity: 0; transform: translateY(0.3rem); } }
+
+@media (max-width: 860px) {
+    .player { grid-template-columns: minmax(0, 1fr); }
+    .pane { min-height: 0; max-height: none; }
+    .pane.conversation { max-height: 26rem; }   /* keeps the folder close enough to watch */
+    .pane.folder { border-left: 0; border-top: 1px solid var(--rule); }
+}
+
+/* PROTOCOL ============================================================================================================= */
+
+.protocol { padding-left: 1.4rem; max-width: var(--measure); }
+.protocol li { margin: 0.4rem 0; }
+.protocol li::marker { font-family: var(--font-display); font-weight: 800; }

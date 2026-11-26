@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Read-only is harder than it looks | jigs</title>
+<link rel="stylesheet" href="../../assets/site.css">
+<link rel="stylesheet" href="../gitro.css">
+<script src="../../data/docs.js"></script>
+<script src="../../assets/site.js"></script>
+</head>
+<body data-page="gitro-read-only">
+<main class="page gitro-page">
+    <section class="plate" aria-labelledby="title">
+        <div>
+            <h1 id="title">Read-only is harder than it looks</h1>
+            <p class="job">Depending on their flags, arguments and settings, many git commands that read can also write files,
+                start programs or read outside the repository. Each request below ran through plain git and through gitro.</p>
+        </div>
+        <dl>
+            <dt>Recorded</dt><dd id="recorded">when the data loads</dd>
+            <dt>Generator</dt><dd><a href="https://github.com/MangkorN/jigs/blob/main/site/data/make-gitro-attempts.py">make-gitro-attempts.py</a></dd>
+            <dt>Test</dt><dd><a href="https://github.com/MangkorN/jigs/blob/main/tests/gitro-test.sh">tests/gitro-test.sh</a></dd>
+        </dl>
+    </section>
+
+    <p class="lead">A list of safe commands isn't enough to make git read-only: <code>show --output</code> writes any file,
+        a plain <code>diff</code> saves the index, and <code>diff</code> given two file names prints any file on the disk.</p>
+
+    <section aria-labelledby="attempts-title">
+        <h2 id="attempts-title">What a read can do</h2>
+        <p>Each request ran in a fresh copy of a small project, once with plain git and once with gitro. The effects come from
+            comparing every file before and after, recording which programs started, and checking the output for a file kept
+            beside the project. Requests that need a setting, such as an external diff program, had it in both runs.</p>
+        <div class="filters" role="group" aria-label="Show requests that"></div>
+        <div class="ledger" id="ledger"></div>
+        <p class="notice" id="no-data" hidden>The recorded requests didn't load. They're in <code>site/data/gitro-attempts.js</code>,
+            which <code>make-gitro-attempts.py</code> writes.</p>
+    </section>
+
+    <section aria-labelledby="safeguards-title">
+        <h2 id="safeguards-title">Where the usual safeguards fall short</h2>
+        <p>Agent tools offer a few ways to keep an agent's git use read-only. Each has been bypassed in public, mostly
+            through requests like the ones above.</p>
+        <div class="safeguards">
+            <div>
+                <h3>Approval prompts</h3>
+                <p>A prompt shows only the command. In Cursor's auto-run mode, shell built-ins could set environment variables
+                    without a prompt, so a <code>PAGER</code> set earlier ran when the user approved a plain
+                    <code>git branch</code>. Fixed in Cursor 2.3
+                    (<a href="https://github.com/cursor/cursor/security/advisories/GHSA-82wg-qcm4-fp2w">CVE-2026-22708</a>).</p>
+            </div>
+            <div>
+                <h3>Allow-lists of commands</h3>
+                <p>An allow-list names commands, but their flags decide what they do. Codex CLI's default list trusted
+                    <code>git show</code> and <code>git diff</code>, which the first request above exploits: a config file written
+                    with <code>--output</code>, then a program started by the next diff. Fixed in Codex CLI 0.95.0
+                    (<a href="https://www.pillar.security/blog/gitpwned-allowlist-to-rce">Pillar Security's write-up</a>).</p>
+            </div>
+            <div>
+                <h3>Git tools for agents</h3>
+                <p>Servers that give agents git as a set of tools pass the agent's arguments on to git. The reference git server
+                    for the Model Context Protocol took <code>--output=&lt;file&gt;</code> as the target of its diff
+                    (<a href="https://nvd.nist.gov/vuln/detail/CVE-2025-68144">CVE-2025-68144</a>), and another took options in place
+                    of revisions (<a href="https://osv.dev/vulnerability/CVE-2026-85626">CVE-2026-85626</a>).</p>
+            </div>
+            <div>
+                <h3>Read-only sandboxes</h3>
+                <p>A read-only sandbox blocks writes regardless of flags, which makes it the strongest of the four. It doesn't
+                    limit reads: everything mounted is visible, including untracked <code>.env</code> files and tokens in
+                    <code>.git/config</code>. Commands allowed to run outside the sandbox, like Codex CLI's allow-list above,
+                    bypass it.</p>
+            </div>
+        </div>
+    </section>
+
+    <section aria-labelledby="holds-title">
+        <h2 id="holds-title">How gitro prevents this</h2>
+        <ul class="points">
+            <li><strong>The caller runs nothing on the repository's machine.</strong> It writes a request (a command and its
+                arguments, one per line) and reads the answer. Without a shell, it can't set variables like <code>PAGER</code>
+                or change git's config.</li>
+            <li><strong>Everything not listed is refused.</strong> Each command comes from a fixed menu, and each flag from that
+                command's allow-list. git keeps adding flags, and most commands accept any unambiguous abbreviation of one
+                (<code>--cont</code> for <code>--contents</code>), so a list of flags to refuse would always miss some.</li>
+            <li><strong>Arguments can't become options or outside files.</strong> An argument can't start with <code>-</code>, and
+                <code>diff</code> checks every name with git's own rule for what's inside the repository.</li>
+            <li><strong>git starts no other program:</strong> no pager, external diff, textconv converter, file-watcher hook or
+                signature check, even if the repository's config sets one.</li>
+            <li><strong>Nothing is saved.</strong> Each command runs against a copy of the index, so not even <code>diff</code> or
+                <code>status</code> writes to the repository.</li>
+            <li><strong>Untracked secrets stay out.</strong> Untracked files appear only by name, never their contents, and remote
+                URLs lose their credentials.</li>
+            <li><strong>Every request is logged.</strong> The server logs each one, and <code>-k</code> keeps a copy of each
+                answer. <a href="https://github.com/MangkorN/jigs/blob/main/tests/gitro-test.sh">tests/gitro-test.sh</a> checks all of
+                the above against a project configured to start a program wherever git would.</li>
+        </ul>
+    </section>
+
+    <section aria-labelledby="limits-title">
+        <h2 id="limits-title">What it doesn't do</h2>
+        <ul class="points">
+            <li>It shows everything git tracks, including any secret committed to the history.</li>
+            <li>It runs the repository's clean filters, such as Git LFS's, which git needs to read files in the working tree.</li>
+            <li>It answers one request at a time and doesn't limit how many a caller sends.</li>
+            <li>Anything that can write to the request folder can send requests, so give each caller its own folder.</li>
+        </ul>
+        <p class="actions">
+            <a class="button primary" href="../../run/">Try your own requests</a>
+            <a class="button" href="../callers/">See an agent use gitro</a>
+            <a class="button" href="../../tools/gitro/">Read the guide</a>
+        </p>
+    </section>
+</main>
+<script src="../../data/gitro-attempts.js"></script>
+<script src="read-only.js"></script>
+</body>
+</html>

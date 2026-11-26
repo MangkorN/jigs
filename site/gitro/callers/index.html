@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Agents and other callers | jigs</title>
+<link rel="stylesheet" href="../../assets/site.css">
+<link rel="stylesheet" href="../gitro.css">
+<script src="../../data/docs.js"></script>
+<script src="../../assets/site.js"></script>
+</head>
+<body data-page="gitro-callers">
+<main class="page gitro-page">
+    <section class="plate" aria-labelledby="title">
+        <div>
+            <h1 id="title">Agents and other callers</h1>
+            <p class="job">A caller asks gitro by writing a file into a folder and reading the answer back. Below, an AI agent
+                does this, with the folder shown beside it.</p>
+        </div>
+        <dl>
+            <dt>Answers</dt><dd id="recorded">real gitro output</dd>
+            <dt>Caller</dt><dd>anything that writes files</dd>
+            <dt>Guide</dt><dd><a href="../../tools/gitro/#connecting-a-caller">Connecting a caller</a></dd>
+        </dl>
+    </section>
+
+    <section aria-labelledby="session-title">
+        <h2 id="session-title">One session, played back</h2>
+        <p>The agent runs where it can't see the repository, such as a sandbox or a container, and shares one folder with the
+            server. The conversation is scripted; gitro's answers are real, recorded from the jigs repository.</p>
+        <div class="player" id="player">
+            <div class="player-controls">
+                <button type="button" class="primary" id="play">Play</button>
+                <button type="button" id="next">Next step</button>
+                <button type="button" class="quiet" id="restart">Start over</button>
+                <span class="progress" id="progress" aria-live="polite"></span>
+            </div>
+            <div class="pane conversation" id="conversation" aria-live="polite">
+                <h3>Conversation</h3>
+            </div>
+            <div class="pane folder">
+                <h3 id="folder-title">Request folder</h3>
+                <ul class="files" id="files" aria-label="Files in the request folder"></ul>
+                <h3>Server log</h3>
+                <pre class="server-log" id="server-log"></pre>
+            </div>
+        </div>
+        <p class="notice" id="no-data" hidden>The recorded answers didn't load. They're in <code>site/data/gitro-demo.js</code>,
+            which <code>make-gitro-demo.py</code> writes.</p>
+    </section>
+
+    <section aria-labelledby="protocol-title">
+        <h2 id="protocol-title">What the caller does</h2>
+        <p>Any program that can write and read files in the folder can be a caller: an agent with a file tool, a script,
+            a scheduled task.</p>
+        <ol class="protocol">
+            <li>Write the request, one argument per line, to a new file in the folder, such as <code>req-1.tmp</code>.
+                <code>log</code>, <code>--oneline</code>, <code>-8</code> asks for <code>gitro log --oneline -8</code>.</li>
+            <li>Rename it to <code>req-1.req</code>. The server picks up only <code>.req</code> files, so it never reads half
+                a request.</li>
+            <li>Wait for <code>req-1.out</code>. Its first line is <code># gitro exit=&lt;code&gt;: &lt;request&gt;</code>, and the
+                command's output follows. The server writes it under another name and renames it, so it's whole when it appears.</li>
+            <li>Read it and delete it. The server removes the request itself, and any answer left over after an hour.</li>
+        </ol>
+        <p>The folder's <code>gitro-server.json</code> says which repository is served and whether the server is still running,
+            and a <code>help serve</code> request answers with these steps, so a caller can learn the protocol from the folder alone.</p>
+        <p class="actions">
+            <a class="button primary" href="../../tools/gitro/#connecting-a-caller">Connect a caller</a>
+            <a class="button" href="../../tools/gitro/#a-caller-in-a-few-lines">A caller in a few lines</a>
+            <a class="button" href="../read-only/">What gitro refuses</a>
+        </p>
+    </section>
+</main>
+<script src="../../data/gitro-demo.js"></script>
+<script src="callers.js"></script>
+</body>
+</html>

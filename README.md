@@ -2,6 +2,8 @@
 
 Small, purpose-built tools for repetitive dev tasks: bash functions for Git Bash, PowerShell scripts for Visual Studio, and a shared bashrc.
 
+The [jigs site](https://mangkorn.github.io/jigs/) has a guide for each tool and a browser UI for running gitro servers.
+
 ```
 bash/
   bashrc              aliases; sources everything in functions/
@@ -14,7 +16,16 @@ bash/
     lsf.sh            sorted list of files under a directory (lsfc: to clipboard)
     toclip.sh         copy any command's output to the clipboard
 powershell/
+  gitro-ui.ps1        browser UI companion for gitro serve on Windows (started by gitro ui)
   vs-tabs.ps1         save/restore Visual Studio tab layouts by name
+python/
+  gitro-ui.py         the same companion for macOS and Linux
+docs/                 one page per tool, which the README's tool list and the site are generated from
+site/                 the jigs site: open site/index.html in a browser, no server needed
+tests/
+  gitro-test.sh       test of what gitro refuses, and that it writes nothing and starts no other program
+  gitro-ui-test.py    end-to-end test of a gitro ui companion
+  make-docs-test.py   test of the generator that turns docs/ into the README's tool list and the site's pages
 examples/
   pq-tabs/            per-project wrapper for vs-tabs.ps1 (copy into a project)
 ```
@@ -31,7 +42,7 @@ echo 'source /d/Repos/jigs/bash/bashrc' >> ~/.bashrc
 
 If `~/.bashrc` already defines any of the same functions or aliases, remove those copies. Otherwise whichever definition comes last wins.
 
-New terminals pick everything up automatically. For an already open terminal, run `source ~/.bashrc`. To confirm the functions loaded (optional): `type csbundle csapply gdm`.
+New terminals pick everything up. For an already open terminal, run `source ~/.bashrc`. To confirm the functions loaded (optional): `type csbundle csapply gdm`.
 
 New tools go in `bash/functions/` as `*.sh` files and are picked up the same way. They must use LF line endings, since bash fails on CRLF.
 
@@ -49,7 +60,7 @@ Set `JIGS_DIR` as a Windows user environment variable, then restart any open ter
 [Environment]::SetEnvironmentVariable('JIGS_DIR', 'D:\Repos\jigs', 'User')
 ```
 
-`vs-tabs.ps1` can be run directly from `powershell/`, but the intended use is a small per-project wrapper (below).
+`vs-tabs.ps1` can be run directly from `powershell/`, but the intended use is a small [per-project wrapper](docs/vs-tabs.md#per-project-wrapper).
 
 #### Execution policy
 
@@ -77,131 +88,15 @@ Files obtained through `git clone` never carry this tag.
 
 ## Tools
 
-### lsf / catcs
+Each tool's usage and details are in [docs/](docs/) and on the [site](https://mangkorn.github.io/jigs/). After editing a page, run `python3 site/data/make-docs.py` to update this list and the site.
 
-```bash
-lsf [dir]       # sorted relative paths of all files under dir, excluding .meta
-catcs [dir]     # contents of every .cs file in dir (non-recursive), BOMs stripped
-```
-
-`lsfc` and `catcsc` do the same and copy the result to the clipboard.
-
-### toclip
-
-```bash
-toclip <command> [args...]
-```
-
-Runs a command and copies its output to the clipboard (UTF-8 safe, via `/dev/clipboard`). If the command fails, the clipboard is left untouched.
-
-### csbundle
-
-```bash
-csbundle [-p prefix] [-o outdir] [-d depth] [-n] [srcdir]
-```
-
-Concatenates the `.cs` files of each directory under `srcdir` into one `.txt` per directory, named by relative path (`Root.txt`, `Root_Drivers.txt`, `Root_Settings_SubSettings.txt`, ...). Output defaults to `~/cs_bundles/<srcdir name>/`. Each file is preceded by a `// ===== path =====` header unless `-n` is given.
-
-With `-d N`, directories at depth N (srcdir is 0) also absorb everything beneath them, which caps the number of bundles. `-d 0` produces a single file.
-
-### csapply
-
-```bash
-csapply [-a] [-n] [-y] [-r] [target] [srcdir]
-```
-
-Overwrites files under `target` with same-named files from the flat folder `srcdir` (default: `.`). Prints a plan and asks for confirmation before writing.
-
-- Matches by exact file name (case-insensitive). Files with no match or more than one match are reported and skipped.
-- Overwrites contents in place and never touches `.meta` files, so Unity GUIDs are preserved.
-- Adopts the target file's BOM and line endings, unless `-r` is given.
-- Flags targets with uncommitted or untracked changes.
-- `-n` dry run, `-y` skip confirmation, `-a` all file types instead of only `.cs`.
-
-### gdm
-
-```bash
-gdm [git diff args]
-```
-
-`git diff` showing only added/removed lines, with file headers but no context lines or hunk headers.
-
-### gitro
-
-```bash
-gitro [-C <repo>] <command> [<flag>...] [<arg>...] [-- <path>...]
-gitro serve [-i <seconds>] <repo> <dir>
-gitro help [<command> | serve]
-```
-
-Read-only git commands from a fixed menu: status, diffs, history, blame, search, branches, tags, refs, stashes and more. Run `gitro` with no arguments for the full list, and `gitro help <command>` for a command's usage and allowed flags.
-
-Each command maps to one git subcommand and accepts only the flags on its allow-list, so nothing it runs can change the repository or read files outside it:
-
-- Flags that write files, run external programs or reach outside the repository (`--output`, `--ext-diff`, `--no-index`, `grep -f`, `blame --contents`, ...) are on no list. Write actions such as `branch -d` can't be expressed either, and `branch` and `tag` always run with `--list`.
-- Arguments before `--` can't start with `-`, so they can't pass options. Everything after `--` is a path.
-- Commands run against a temporary copy of the index, since `git status` and `git diff` otherwise refresh it and write it back.
-- `remote` hides any credentials embedded in remote URLs.
-
-Flags that take a value are written as one argument (`-n5`, `--format=%h %s`). A cluster of single-letter flags works when each letter is allowed on its own (`shortlog -sn`).
-
-Output goes to the terminal, so it can be redirected or piped like any command's:
-
-```bash
-gitro status --short --branch
-gitro diff --cached --stat -- src
-gitro log --oneline -10
-gitro show HEAD~2:README.md
-gitro -C /d/Repos/MyProject rev-list --count --left-right main...@{upstream}   # another repository
-gitro -C /d/Repos/MyProject status > /d/Temp/status.txt                        # to a file
-toclip gitro diff --cached --stat                                              # to the clipboard
-```
-
-#### Serving other processes
-
-`gitro serve` lets another process inspect a repository with no access to it, such as a tool in a VM or container that can only reach a shared folder. It watches `<dir>` and answers each request that appears there, until stopped with Ctrl+C:
-
-1. The caller writes a request with one argument per line, the command first, under a temporary name, then renames it to `<name>.req`.
-2. gitro runs it and writes `<name>.out`: a `# gitro exit=<code>: <request>` line, followed by the command's output and errors.
-3. Requests are removed once taken, and responses after an hour.
-
-```bash
-gitro serve /d/Repos/MyProject /d/Exchange/myproject
-```
-
-The server's terminal only logs one line per request and doesn't read typed input. To run commands yourself, use `gitro` directly in another terminal. To try the protocol by hand, write a request from another terminal:
-
-```bash
-printf '%s\n' status --short > /d/Exchange/myproject/t1.tmp
-mv /d/Exchange/myproject/t1.tmp /d/Exchange/myproject/t1.req
-sleep 1; cat /d/Exchange/myproject/t1.out
-```
-
-A `help serve` request returns these steps, so a caller can learn the protocol through the folder itself. Each server answers for one repository. To serve several, run one per repository, each with its own folder.
-
-### vs-tabs (PowerShell)
-
-Saves and restores Visual Studio 2022 (17.9+) document tab layouts by name. Actions are `save`, `load`, `list`, `view` (read-only), and `help` (the default). Action and snapshot name are positional, so `.\vs-tabs.ps1 save my-layout` is the same as `.\vs-tabs.ps1 -Action Save -Name my-layout`. Run `vs-tabs.ps1` with no arguments for full help.
-
-#### Per-project wrapper
-
-`examples/pq-tabs/` is a wrapper that fills in the solution path for one project. To use it in a project:
-
-1. Copy `pq-tabs.ps1` and `.gitignore` into a folder one level below the project root (the folder containing the `.sln`), e.g. `<ProjectRoot>/VSTabs/`. Rename the script as you like.
-2. Make sure `JIGS_DIR` is set (see Install).
-3. From that folder: `.\pq-tabs.ps1 save my-layout`
-4. (Optional) Add a `pqt` alias to your PowerShell profile so the wrapper runs from any directory:
-
-   ```powershell
-   if (-not (Test-Path $PROFILE)) { New-Item $PROFILE -Force | Out-Null }; Add-Content $PROFILE 'Set-Alias pqt D:\Repos\MyProject\VSTabs\pq-tabs.ps1'
-   ```
-
-   - `$PROFILE` is the path of the script PowerShell runs at the start of every session (each PowerShell version has its own).
-   - `if (-not (Test-Path $PROFILE)) { New-Item $PROFILE -Force | Out-Null }` creates that file, and its folder, only if it doesn't exist yet, so an existing profile is never overwritten.
-   - `Add-Content` appends the `Set-Alias` line to the profile, so every new session defines the alias.
-
-   New windows pick it up automatically. For an already open window, run `. $PROFILE`.
-
-   Then `pqt`, `pqt list`, `pqt view`, `pqt view my-layout`, `pqt save my-layout` and `pqt load my-layout` all work, and snapshot names tab-complete from the wrapper's folder regardless of the current directory.
-
-Snapshots are saved as `.json` next to the wrapper and ignored by its `.gitignore`.
+<!-- tools:start: written by site/data/make-docs.py from docs/, so edit those pages, then run it -->
+- **[lsf](docs/lsf.md):** Lists every file under a folder as sorted relative paths, leaving out Unity's `.meta` files.
+- **[catcs](docs/catcs.md):** Prints the contents of every `.cs` file in a folder (not its subfolders), with UTF-8 byte order marks stripped.
+- **[toclip](docs/toclip.md):** Runs a command and copies its output to the clipboard.
+- **[csbundle](docs/csbundle.md):** Bundles the `.cs` files of a source tree into one text file per folder, named by the folder's relative path.
+- **[csapply](docs/csapply.md):** Overwrites files in a project with same-named files from a flat folder, keeping their Unity `.meta` files, byte order marks and line endings.
+- **[gdm](docs/gdm.md):** Runs `git diff` showing only added and removed lines, with file headers but no context lines or hunk headers.
+- **[gitro](docs/gitro.md):** Runs read-only git commands from a fixed menu. `gitro serve` answers them through a shared folder, so a program without access to the repository, such as an AI agent in a sandbox, can still inspect it.
+- **[vs-tabs](docs/vs-tabs.md):** Saves and restores Visual Studio 2022 (17.9+) document tab layouts by name.
+<!-- tools:end -->

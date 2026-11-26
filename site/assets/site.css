@@ -1,0 +1,279 @@
+/* jigs site: shared styles. Colors follow shop-floor safety signals: green running, yellow attention,
+   red stopped or failed, blue actions. Each font family loads on its own, so one failing leaves the others. */
+
+@import url('https://fonts.googleapis.com/css2?family=Big+Shoulders:wght@600..800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Big+Shoulders+Stencil:wght@800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:ital,wght@0,400;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;700&display=swap');
+
+/* THEME ================================================================================================================ */
+
+:root {
+    --steel: #e6e9ec;
+    --plate: #f6f7f8;
+    --ink: #1d2125;
+    --ink-soft: #545d67;
+    --rule: #c2c8ce;
+    --rule-strong: #1d2125;
+    --blue: #1b4f9c;
+    --blue-soft: #dbe5f4;
+    --green: #1e7a4c;
+    --green-soft: #d9eee2;
+    --yellow: #f2b600;
+    --yellow-soft: #fbefc7;
+    --red: #b3261e;
+    --red-soft: #f6dcda;
+    --code-bg: #eceef1;
+
+    --font-display: 'Big Shoulders', 'Arial Narrow', 'Roboto Condensed', sans-serif-condensed, sans-serif;
+    --font-stencil: 'Big Shoulders Stencil', var(--font-display);
+    --font-text: 'Atkinson Hyperlegible Next', 'Segoe UI', system-ui, sans-serif;
+    --font-mono: 'Atkinson Hyperlegible Mono', ui-monospace, Consolas, 'Cascadia Mono', Menlo, monospace;
+
+    --measure: 68ch;
+    --rail: 15rem;
+    color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+    --steel: #171b1f;
+    --plate: #1f252a;
+    --ink: #e2e6ea;
+    --ink-soft: #9aa4ae;
+    --rule: #343c44;
+    --rule-strong: #c9d0d6;
+    --blue: #86adf0;
+    --blue-soft: #1f2d45;
+    --green: #5cc28f;
+    --green-soft: #1a3226;
+    --yellow: #f7c843;
+    --yellow-soft: #3a3115;
+    --red: #f07167;
+    --red-soft: #3e2120;
+    --code-bg: #262d33;
+    color-scheme: dark;
+}
+
+/* BASE ================================================================================================================= */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+    margin: 0;
+    background: var(--steel);
+    color: var(--ink);
+    font: 17px/1.55 var(--font-text);
+}
+
+a { color: var(--blue); text-underline-offset: 0.18em; }
+a:hover { text-decoration-thickness: 2px; }
+
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+code, kbd, pre, samp { font-family: var(--font-mono); font-size: 0.9em; }
+
+:not(pre) > code {
+    background: var(--code-bg);
+    border-radius: 3px;
+    padding: 0.05em 0.3em;
+    overflow-wrap: anywhere;
+}
+
+pre {
+    background: var(--code-bg);
+    border-radius: 3px;
+    padding: 0.8rem 1rem;
+    overflow-x: auto;
+    line-height: 1.45;
+}
+
+h1, h2 { font-family: var(--font-display); font-weight: 800; line-height: 1.05; letter-spacing: 0.01em; }
+h2 { font-size: 2rem; margin: 2.4rem 0 0.6rem; }
+h3 { font-size: 1.1rem; margin: 1.6rem 0 0.4rem; }
+
+p, ul, ol { max-width: var(--measure); }
+
+[hidden] { display: none !important; }
+
+/* A Copy button on the top right of a code block or quote, out of the way until it's wanted. */
+.copyable { position: relative; max-width: 100%; }
+.copyable > pre { padding-right: 4.5rem; }
+.copyable > .copy {
+    position: absolute;
+    top: 0.35rem;
+    right: 0.35rem;
+    font-size: 0.8rem;
+    padding: 0.2rem 0.55rem;
+    background: var(--plate);
+    border-color: var(--rule);
+}
+.copy-buffer { position: fixed; top: -100vh; opacity: 0; }
+
+/* On a narrow screen, code scrolls sideways under the button, so the button gets a strip of its own above the code. */
+@media (max-width: 640px) {
+    .copyable > pre { padding-top: 2.4rem; padding-right: 1rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+
+/* SHELL ================================================================================================================ */
+
+.site-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.6rem 1.25rem;
+    border-bottom: 2px solid var(--rule-strong);
+    background: var(--plate);
+}
+
+.wordmark {
+    font: 800 2rem/1 var(--font-stencil);
+    color: var(--ink);
+    text-decoration: none;
+    letter-spacing: 0.02em;
+}
+
+.site-header .tagline { color: var(--ink-soft); font-size: 0.95rem; margin: 0; }
+.site-header .spacer { flex: 1; }
+.site-header a.plain { color: var(--ink); }
+
+.layout {
+    display: grid;
+    grid-template-columns: var(--rail) minmax(0, 1fr);
+    min-height: calc(100vh - 3.4rem);
+}
+
+.rail {
+    border-right: 1px solid var(--rule);
+    padding: 1.25rem 1rem 2rem 1.25rem;
+}
+
+.rail h2 {
+    font: 700 1.1rem/1.2 var(--font-display);
+    color: var(--ink-soft);
+    margin: 1.2rem 0 0.3rem;
+    letter-spacing: 0.03em;
+}
+.rail h2:first-child { margin-top: 0; }
+.rail ul { list-style: none; margin: 0; padding: 0; }
+.rail a {
+    display: block;
+    padding: 0.2rem 0.5rem;
+    margin-left: -0.5rem;
+    border-left: 3px solid transparent;
+    color: var(--ink);
+    text-decoration: none;
+}
+.rail a:hover { border-left-color: var(--rule); }
+.rail a[aria-current='page'] { border-left-color: var(--ink); font-weight: 700; }
+
+.page {
+    padding: 1.75rem 2rem 4rem;
+    max-width: 72rem;
+}
+
+@media (max-width: 860px) {
+    .layout { grid-template-columns: minmax(0, 1fr); }
+    .rail { border-right: 0; border-bottom: 1px solid var(--rule); padding: 0.75rem 1.25rem; }
+    /* Each group becomes a row: its name, then its links wrapping beside it. */
+    .rail nav { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 0.35rem 1rem; align-items: baseline; }
+    .rail h2 { margin: 0; font-size: 1rem; }
+    .rail ul { display: flex; flex-wrap: wrap; gap: 0.1rem 1rem; }
+    .rail a { margin-left: 0; padding: 0.1rem 0; border-left: 0; border-bottom: 2px solid transparent; }
+    .rail a:hover { border-bottom-color: var(--rule); }
+    .rail a[aria-current='page'] { border-bottom-color: var(--ink); }
+    .page { padding: 1.25rem 1.25rem 3rem; }
+    .site-header .tagline { display: none; }
+}
+
+/* ID PLATE ============================================================================================================= */
+
+/* The equipment plate at the top of each tool page: the name, its job, and where it runs. */
+.plate {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 1rem 2.5rem;
+    align-items: end;
+    border: 2px solid var(--rule-strong);
+    background: var(--plate);
+    padding: 1.1rem 1.4rem 1.2rem;
+    margin-bottom: 1.5rem;
+}
+
+.plate h1 { font-size: clamp(2.6rem, 6vw, 4rem); margin: 0; }
+.plate .job { margin: 0.35rem 0 0; font-size: 1.15rem; color: var(--ink-soft); }
+
+.plate dl {
+    display: grid;
+    grid-template-columns: auto auto;
+    gap: 0.15rem 1rem;
+    margin: 0;
+    font-size: 0.9rem;
+}
+.plate dt { color: var(--ink-soft); }
+.plate dd { margin: 0; }
+.plate dd code { background: none; padding: 0; }
+
+@media (max-width: 640px) {
+    .plate { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* CONTROLS ============================================================================================================= */
+
+button, .button {
+    font: 700 0.95rem/1.2 var(--font-text);
+    color: var(--ink);
+    background: var(--plate);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 0.45rem 0.9rem;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+}
+button:hover:not(:disabled), .button:hover { border-color: var(--ink-soft); }
+button:disabled { opacity: 0.5; cursor: default; }
+button.primary, .button.primary { background: var(--blue); border-color: var(--blue); color: var(--plate); }
+button.stop { color: var(--red); }
+button.quiet { border-color: transparent; background: none; padding-inline: 0.5rem; }
+button.quiet:hover:not(:disabled) { border-color: var(--rule); }
+
+input[type='text'] {
+    font: 0.95rem/1.3 var(--font-mono);
+    color: var(--ink);
+    background: var(--steel);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 0.45rem 0.6rem;
+    width: 100%;
+    min-width: 0;
+}
+input[type='text']:focus-visible { outline-offset: 0; }
+
+.notice {
+    border-left: 4px solid var(--yellow);
+    background: var(--yellow-soft);
+    padding: 0.7rem 1rem;
+    max-width: var(--measure);
+}
+.notice.error { border-left-color: var(--red); background: var(--red-soft); }
+.notice p { margin: 0.2rem 0; }
+
+/* State badges: the shop signal colors, with the state in words so color isn't the only cue. */
+.state {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+.state::before { content: ''; width: 0.6rem; height: 0.6rem; border-radius: 50%; background: var(--ink-soft); }
+.state.running::before { background: var(--green); }
+.state.exited::before { background: var(--red); }
+.state.attention::before { background: var(--yellow); }

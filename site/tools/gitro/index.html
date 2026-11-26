@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>gitro | jigs</title>
+<link rel="stylesheet" href="../../assets/site.css">
+<link rel="stylesheet" href="../tools.css">
+<script src="../../data/docs.js"></script>
+<script src="../../assets/site.js"></script>
+</head>
+<!-- Written by site/data/make-docs.py from docs/gitro.md. Edit that page, then run it again. -->
+<body data-page="tool-gitro">
+<main class="page tool">
+    <section class="plate" aria-labelledby="title">
+        <div>
+            <h1 id="title">gitro</h1>
+            <p class="job">Runs read-only git commands from a fixed menu. <code>gitro serve</code> answers them through a shared folder, so a program without access to the repository, such as an AI agent in a sandbox, can still inspect it.</p>
+        </div>
+        <dl>
+            <dt>Kind</dt><dd>Bash function</dd>
+            <dt>Script</dt><dd><a href="https://github.com/MangkorN/jigs/blob/main/bash/functions/gitro.sh"><code>bash/functions/gitro.sh</code></a></dd>
+            <dt>Page</dt><dd><a href="https://github.com/MangkorN/jigs/blob/main/docs/gitro.md"><code>docs/gitro.md</code></a></dd>
+            <dt>Try it</dt><dd><a href="../../run/">Run gitro in your browser</a></dd>
+            <dt>Tested</dt><dd><a href="../../gitro/read-only/">What it refuses, and why</a></dd>
+            <dt>Callers</dt><dd><a href="../../gitro/callers/">An agent asking gitro</a></dd>
+        </dl>
+    </section>
+    <nav class="contents" aria-label="On this page">
+        <h2>On this page</h2>
+        <ul>
+            <li class="level-2"><a href="#serving-other-processes">Serving other processes</a></li>
+            <li class="level-2"><a href="#connecting-a-caller">Connecting a caller</a></li>
+            <li class="level-3"><a href="#a-caller-in-a-few-lines">A caller in a few lines</a></li>
+            <li class="level-2"><a href="#browser-ui">Browser UI</a></li>
+        </ul>
+    </nav>
+    <article class="doc">
+<pre data-language="bash"><code>gitro [-C &lt;repo&gt;] &lt;command&gt; [&lt;flag&gt;...] [&lt;arg&gt;...] [-- &lt;path&gt;...]
+gitro serve [-i &lt;seconds&gt;] [-k] [-n &lt;name&gt;] &lt;repo&gt; &lt;dir&gt;
+gitro list [&lt;root&gt;]
+gitro ui [start | stop | status] [&lt;option&gt;...]
+gitro help [&lt;command&gt; | serve]</code></pre>
+<p>The menu covers status, diffs, history, blame, search, branches, tags, refs, stashes and more. <code>gitro</code> with no arguments lists it, and <code>gitro help &lt;command&gt;</code> shows a command's usage and allowed flags.</p>
+<p>Each command maps to one git subcommand and accepts only the flags on its allow-list, so it can't change the repository, read files outside it or start another program:</p>
+<ul>
+<li>Flags that write files, run external programs or reach outside the repository (<code>--output</code>, <code>--ext-diff</code>, <code>--no-index</code>, <code>grep -f</code>, <code>blame --contents</code>, ...) are on no list. Write actions such as <code>branch -d</code> can't be expressed either, and <code>branch</code> and <code>tag</code> always run with <code>--list</code>.</li>
+<li>Arguments before <code>--</code> can't start with <code>-</code>, so they can't pass options. Everything after <code>--</code> is a path.</li>
+<li><code>diff</code> refuses names outside the working tree, before or after <code>--</code>. Given two names and one of them outside, <code>git diff</code> would compare the files on disk instead, as if given <code>--no-index</code>.</li>
+<li>git starts no pager, external diff, textconv converter, file-watcher hook (<code>core.fsmonitor</code>) or signature check, even if the repository's config sets one. <code>--format</code> and <code>--pretty</code> refuse signature placeholders (<code>%G?</code>, ...), which start gpg, and <code>range-diff</code> is refused while a textconv converter is configured, since it runs it despite <code>--no-textconv</code>.</li>
+<li>The repository's clean filters, such as Git LFS's, still run, since git needs them to read working-tree files.</li>
+<li>Commands run against a temporary copy of the index, since <code>git status</code> and <code>git diff</code> otherwise refresh it and write it back.</li>
+<li><code>remote</code> hides any credentials embedded in remote URLs.</li>
+</ul>
+<p><code>tests/gitro-test.sh</code> checks these against a repository set up to start a program wherever git would.</p>
+<p>Flags that take a value are written as one argument (<code>-n5</code>, <code>--format=%h %s</code>). A cluster of single-letter flags works when each letter is allowed on its own (<code>shortlog -sn</code>).</p>
+<p>Output goes to the terminal, so it can be redirected or piped like any command's:</p>
+<pre data-language="bash"><code>gitro status --short --branch
+gitro diff --cached --stat -- src
+gitro log --oneline -10
+gitro show HEAD~2:README.md
+gitro -C /d/Repos/MyProject rev-list --count --left-right main...@{upstream}   # another repository
+gitro -C /d/Repos/MyProject status &gt; /d/Temp/status.txt                        # to a file
+toclip gitro diff --cached --stat                                              # to the clipboard</code></pre>
+<p><code>gitro.sh</code> also runs as a script, so programs that don't load the bashrc, such as PowerShell or a scheduled task, can call it through Git's bash. Windows paths work in this form:</p>
+<pre data-language="powershell"><code>&amp; 'C:\Program Files\Git\bin\bash.exe' D:\Repos\jigs\bash\functions\gitro.sh -C D:\Repos\MyProject status</code></pre>
+<h2 id="serving-other-processes">Serving other processes</h2>
+<p><code>gitro serve</code> lets another process inspect a repository with no access to it, such as a tool in a VM or container that can only reach a shared folder. It watches <code>&lt;dir&gt;</code> and answers each request that appears there, until stopped with Ctrl+C:</p>
+<ol>
+<li>The caller writes a request with one argument per line, the command first, under a temporary name, then renames it to <code>&lt;name&gt;.req</code>.</li>
+<li>gitro runs it and writes <code>&lt;name&gt;.out</code>: a <code># gitro exit=&lt;code&gt;: &lt;request&gt;</code> line, followed by the command's output and errors.</li>
+<li>Requests are removed once taken, and responses after an hour.</li>
+</ol>
+<pre data-language="bash"><code>gitro serve /d/Repos/MyProject /d/Exchange/myproject
+gitro serve -k /d/Repos/MyProject /d/Exchange/myproject   # also keep a copy of each response</code></pre>
+<p>With <code>-k</code>, the server also keeps a copy of each response in <code>&lt;dir&gt;/kept/</code> for an hour, so you can look back at what was asked and answered after the caller has removed its response.</p>
+<p>The server's terminal only logs one line per request and doesn't read typed input. To run commands yourself, use <code>gitro</code> directly in another terminal. To try the protocol by hand, write a request from another terminal:</p>
+<pre data-language="bash"><code>printf '%s\n' status --short &gt; /d/Exchange/myproject/t1.tmp
+mv /d/Exchange/myproject/t1.tmp /d/Exchange/myproject/t1.req
+sleep 1; cat /d/Exchange/myproject/t1.out</code></pre>
+<p>A <code>help serve</code> request returns these steps, so a caller can learn the protocol through the folder itself. Each server answers for one repository. To serve several, run one per repository, each with its own folder.</p>
+<p>While it runs, a server keeps <code>&lt;dir&gt;/gitro-server.json</code> up to date: its name, repository, host, process id, start time, and the time it last refreshed the file, every 10 seconds. A caller that can see several request folders reads these to find the one serving the repository it wants. The name is the repository's folder name unless <code>-n</code> gives another. One folder has one server: <code>gitro serve</code> refuses a folder whose server is still running, and removes the file when it stops. A file left behind by a server that was killed counts as stale once its process is gone, or after a minute without a refresh.</p>
+<pre data-language="bash"><code>gitro serve -n piquest /d/Repos/PiQuest-Unity /d/Exchange/piquest
+gitro list /d/Exchange    # the servers answering in /d/Exchange and the folders under it</code></pre>
+<h2 id="connecting-a-caller">Connecting a caller</h2>
+<p>A caller is anything that can write and read files in the request folder: an AI agent in a sandbox, a tool in a VM or container, a script running under another account. It needs no git, no access to the repository and nothing installed.</p>
+<p><strong>What a caller can see:</strong> whatever the allow-listed commands show about the repository, such as its files, history, diffs, branches and tags. <strong>What it can't do:</strong> change anything, run anything but gitro's commands, or read outside the repository. So serve only repositories the caller may read.</p>
+<p>To connect one:</p>
+<ol>
+<li><p><strong>Pick a request folder the caller can reach:</strong> for an agent on your machine, a folder it's allowed to work in; for a VM or container, a shared or mounted folder. Keep it outside the repository, since the caller needs only this folder.</p></li>
+<li><p><strong>Start a server</strong> for the repository and that folder, in a terminal or on the Run page (<code>gitro ui</code>):</p>
+<pre data-language="bash"><code>gitro serve -k /d/Repos/MyProject /d/Exchange/myproject</code></pre>
+<p><code>-k</code> keeps a copy of each response for an hour, so you can see what the caller got as well as what it asked.</p></li>
+<li><p><strong>Tell the caller where the folder is.</strong> It learns the rest from the folder: <code>gitro-server.json</code> names the repository being served, and a <code>help serve</code> request answers with the protocol. To an agent, for instance:</p>
+<blockquote>
+<p>This project's git repository is served read-only through gitro in <code>/mnt/exchange/myproject</code>, a folder you can write to. You have no access to the repository itself. To run a gitro command, write its arguments, one per line, to a new file in that folder, rename the file so its name ends in <code>.req</code>, then wait for the file with the same name ending in <code>.out</code>, read it and delete it. Start with <code>help serve</code>, then <code>help</code>, then <code>status --short --branch</code>.</p>
+</blockquote>
+<p>Give the folder's path as the caller sees it: <code>D:\Exchange\myproject</code> on Windows can be <code>/mnt/d/Exchange/myproject</code> in WSL, or wherever a container mounts it.</p></li>
+<li><p><strong>Watch the requests.</strong> The server's terminal logs one line per request, and the Run page shows each request with its response.</p></li>
+</ol>
+<p>A caller that can see several request folders, such as <code>/mnt/exchange</code>, finds a repository's server by reading each folder's <code>gitro-server.json</code>. A server that isn't running answers nothing, so a caller should give up after a while and say so rather than wait.</p>
+<h3 id="a-caller-in-a-few-lines">A caller in a few lines</h3>
+<p>A caller that runs scripts can keep one of these as a helper. Each sends one request, waits up to 20 seconds and returns the response, whose first line is <code># gitro exit=&lt;code&gt;: &lt;request&gt;</code>.</p>
+<pre data-language="bash"><code># gitro_ask &lt;folder&gt; &lt;command&gt; [&lt;arg&gt;...]
+gitro_ask() {
+    local dir=$1 name=req-$$-$RANDOM i
+    shift
+    printf '%s\n' "$@" &gt; "$dir/$name.tmp" &amp;&amp; mv "$dir/$name.tmp" "$dir/$name.req" || return
+    for (( i = 0; i &lt; 100; i++ )); do
+        if [[ -f $dir/$name.out ]]; then
+            cat "$dir/$name.out" &amp;&amp; rm -f "$dir/$name.out"
+            return
+        fi
+        sleep 0.2
+    done
+    rm -f "$dir/$name.req"
+    echo "no answer: is gitro serve running for $dir?" &gt;&amp;2
+    return 1
+}</code></pre>
+<pre data-language="python"><code>import os, time, uuid
+
+def gitro_ask(folder, *args):
+    """gitro_ask('/mnt/exchange/myproject', 'log', '--oneline', '-5')"""
+    name = os.path.join(folder, 'req-' + uuid.uuid4().hex)
+    with open(name + '.tmp', 'w', encoding='utf-8', newline='\n') as request:
+        request.write('\n'.join(args) + '\n')
+    os.replace(name + '.tmp', name + '.req')
+    for _ in range(100):
+        if os.path.exists(name + '.out'):
+            with open(name + '.out', encoding='utf-8', errors='replace') as response:
+                text = response.read()
+            os.remove(name + '.out')
+            return text
+        time.sleep(0.2)
+    raise TimeoutError('no answer: is gitro serve running for %s?' % folder)</code></pre>
+<pre data-language="powershell"><code># Invoke-Gitro D:\Exchange\myproject log, --oneline, -5
+function Invoke-Gitro([string]$Folder, [string[]]$Arguments) {
+    $name = Join-Path $Folder ('req-' + [guid]::NewGuid().ToString('N'))
+    # UTF-8 without a byte order mark, which gitro would read as part of the command.
+    [IO.File]::WriteAllText("$name.tmp", ($Arguments -join "`n") + "`n", [Text.UTF8Encoding]::new($false))
+    Move-Item -LiteralPath "$name.tmp" -Destination "$name.req"
+    for ($i = 0; $i -lt 100; $i++) {
+        if (Test-Path -LiteralPath "$name.out") {
+            $text = [IO.File]::ReadAllText("$name.out")
+            Remove-Item -LiteralPath "$name.out"
+            return $text
+        }
+        Start-Sleep -Milliseconds 200
+    }
+    throw "No answer: is gitro serve running for $Folder?"
+}</code></pre>
+<h2 id="browser-ui">Browser UI</h2>
+<pre data-language="bash"><code>gitro ui                  # starts the companion in the background and opens the Run page from this clone
+gitro ui -o hosted        # opens the hosted copy of the site instead
+gitro ui -p 47300         # listens on another port (47210 by default)
+gitro ui -f               # runs in this terminal instead, where Ctrl+C stops it
+gitro ui status           # whether it runs, and its servers
+gitro ui stop             # stops it and every server it started</code></pre>
+<p><code>gitro ui</code> starts a small companion process in the background and opens the jigs site's Run page, <code>site/run/index.html</code>. The terminal can be closed afterwards; running <code>gitro ui</code> again reopens the page. The companion is <code>powershell/gitro-ui.ps1</code> on Windows and <code>python/gitro-ui.py</code> on macOS and Linux (Python 3.8 or newer). On the Run page you can:</p>
+<ul>
+<li>pick a repository and a request folder with the system's folder dialog, or type a path and choose from its subfolders</li>
+<li>start, restart and stop servers, several at once, each running as <code>gitro serve -k</code></li>
+<li>watch requests arrive with their responses, and send your own</li>
+</ul>
+<p>Stopping the companion, from the page or with <code>gitro ui stop</code>, stops every server it started.</p>
+<p>The page works without the companion: it then says gitro ui isn't running and offers a demo built from real gitro answers. While the companion runs, it writes its port and a random token to <code>.gitro-ui/session.js</code> in the clone, which ignores itself in git. The page reads that file every two seconds, so it connects by itself when the companion starts and notices when it stops. The companion's log is in the same folder.</p>
+<p>The companion listens on 127.0.0.1 only, and answers only calls that carry its token, from pages opened from a file or from the hosted site. The hosted page can't read your files, so <code>gitro ui -o hosted</code> opens it with the token in the link; reaching your machine from there also needs the browser's one-time permission to access apps and services on your device. <code>gitro ui -h</code> lists the options.</p>
+<p>To check a companion end to end, start <code>gitro ui</code> and run <code>python tests/gitro-ui-test.py</code>, which finds it through the session file. On macOS and Linux, <code>python3 tests/gitro-ui-test.py --launch</code> also tests starting and stopping it.</p>
+    </article>
+</main>
+</body>
+</html>

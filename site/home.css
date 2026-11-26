@@ -1,0 +1,30 @@
+/* Overview page. */
+
+.lead { font-size: 1.15rem; }
+
+/* gitro, the tool the site is built around, in a panel of its own. */
+.feature {
+    background: var(--plate);
+    border: 1px solid var(--rule);
+    border-left: 6px solid var(--ink);
+    padding: 0.4rem 1.4rem 1.1rem;
+    margin: 2rem 0;
+    max-width: 52rem;
+}
+.feature h2 { margin-top: 0.6rem; }
+.feature .actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 0; }
+
+.tools {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 0.55rem 1.5rem;
+    max-width: 52rem;
+}
+.tools dt { font-family: var(--font-mono); font-weight: 700; white-space: nowrap; }
+.tools dt .kind { margin-left: 0.5rem; font: 0.75rem/1 var(--font-text); color: var(--ink-soft); }
+.tools dd { margin: 0; }
+
+@media (max-width: 640px) {
+    .tools { grid-template-columns: minmax(0, 1fr); gap: 0.1rem; }
+    .tools dd { margin-bottom: 0.7rem; }
+}

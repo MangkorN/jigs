@@ -5,6 +5,7 @@ csapply()
 (
     all=0; yes=0; dry=0; raw=0
     OPTIND=1
+    [[ $1 == --help ]] && set -- -h
     while getopts ":aynrh" opt; do
         case $opt in
             a) all=1 ;;
@@ -12,16 +13,23 @@ csapply()
             n) dry=1 ;;
             r) raw=1 ;;
             h) cat <<'EOF'
-usage: csapply [-a] [-n] [-y] [-r] [target] [srcdir]
-  target   tree to update (default: $CSAPPLY_TARGET)
-  srcdir   flat folder of replacement files (default: .)
-  -a       all file types, not just .cs (.meta is always excluded)
-  -n       dry run: print the plan and exit
-  -y       apply without confirmation
-  -r       raw copy: don't adapt BOM/line endings to the target file
+usage: csapply [-a] [-n] [-y] [-r] [<target>] [<srcdir>]
+
+Overwrite files under <target> (default: $CSAPPLY_TARGET) with same-named files
+from the flat folder <srcdir> (default: .). Files are matched by name, ignoring
+case; a name with no match, or more than one, is skipped. Contents are replaced
+in place, so .meta files and Unity GUIDs stay as they were, and each file keeps
+its byte order mark and line endings. Shows the plan, marking files with no
+git backup (uncommitted changes, untracked, or outside a repository), and asks
+before writing.
+
+   -a   all file types, not only .cs (.meta files are always left out)
+   -n   dry run: show the plan and exit
+   -y   apply without asking
+   -r   raw copy: keep the source files' byte order marks and line endings
 EOF
                exit 0 ;;
-            \?) echo "csapply: unknown option -$OPTARG" >&2; exit 2 ;;
+            \?) echo "csapply: unknown option '-$OPTARG'. See 'csapply -h'." >&2; exit 2 ;;
         esac
     done
     shift $((OPTIND - 1))

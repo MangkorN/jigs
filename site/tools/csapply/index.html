@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>csapply | jigs</title>
+<link rel="stylesheet" href="../../assets/site.css">
+<link rel="stylesheet" href="../tools.css">
+<script src="../../data/docs.js"></script>
+<script src="../../assets/site.js"></script>
+</head>
+<!-- Written by site/data/make-docs.py from docs/csapply.md. Edit that page, then run it again. -->
+<body data-page="tool-csapply">
+<main class="page tool">
+    <section class="plate" aria-labelledby="title">
+        <div>
+            <h1 id="title">csapply</h1>
+            <p class="job">Overwrites files in a project with same-named files from a flat folder, keeping their Unity <code>.meta</code> files, byte order marks and line endings.</p>
+        </div>
+        <dl>
+            <dt>Kind</dt><dd>Bash function</dd>
+            <dt>Script</dt><dd><a href="https://github.com/MangkorN/jigs/blob/main/bash/functions/csapply.sh"><code>bash/functions/csapply.sh</code></a></dd>
+            <dt>Page</dt><dd><a href="https://github.com/MangkorN/jigs/blob/main/docs/csapply.md"><code>docs/csapply.md</code></a></dd>
+        </dl>
+    </section>
+
+    <article class="doc">
+<pre data-language="bash"><code>csapply [-a] [-n] [-y] [-r] [&lt;target&gt;] [&lt;srcdir&gt;]</code></pre>
+<p>Overwrites files under <code>&lt;target&gt;</code> (default: <code>$CSAPPLY_TARGET</code>) with same-named files from the flat folder <code>&lt;srcdir&gt;</code> (default: <code>.</code>). Prints a plan and asks for confirmation before writing.</p>
+<ul>
+<li>Matches by exact file name (case-insensitive). Files with no match or more than one match are reported and skipped.</li>
+<li>Overwrites contents in place and never touches <code>.meta</code> files, so Unity GUIDs are preserved.</li>
+<li>Adopts the target file's BOM and line endings, unless <code>-r</code> is given.</li>
+<li>Marks targets with no git backup: uncommitted changes, untracked, or outside a repository.</li>
+<li><code>-n</code> dry run, <code>-y</code> skip confirmation, <code>-a</code> all file types instead of only <code>.cs</code>.</li>
+</ul>
+    </article>
+</main>
+</body>
+</html>
