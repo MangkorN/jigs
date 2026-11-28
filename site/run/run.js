@@ -603,7 +603,7 @@
                 const found = FROM_FILE && state.found;
                 content = statusWindow('blue', 'Demo', [
                     el('p', {}, window.JIGS_GITRO_DEMO
-                        ? 'It replays real gitro answers recorded from the jigs repository: an outside caller reviewing it, ' +
+                        ? 'It replays real gitro answers recorded from an example repository: an outside caller reviewing it, ' +
                           'and answers to the suggested requests. Nothing here runs on your computer.'
                         : 'Its recorded data is missing (data/gitro-demo.js).'),
                     found ? el('p', { class: 'found' }, el('strong', {}, 'gitro ui is running on this computer. '),

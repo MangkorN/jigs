@@ -27,7 +27,7 @@ tests/
   gitro-ui-test.py    end-to-end test of a gitro ui companion
   make-docs-test.py   test of the generator that turns docs/ into the README's tool list and the site's pages
 examples/
-  pq-tabs/            per-project wrapper for vs-tabs.ps1 (copy into a project)
+  project-tabs/       per-project wrapper for vs-tabs.ps1 (copy into a project)
 ```
 
 ## Install
@@ -75,13 +75,13 @@ Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
 If they're set by Group Policy, that won't take effect. Bypass per run instead:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\pq-tabs.ps1 -Action List
+powershell -ExecutionPolicy Bypass -File .\project-tabs.ps1 -Action List
 ```
 
 **"is not digitally signed"**: the policy is fine, but this file carries Windows' downloaded-from-the-internet tag, which is added to files saved from a browser, chat, or email, or extracted from a downloaded zip with Explorer. Remove it per file:
 
 ```powershell
-Unblock-File .\pq-tabs.ps1
+Unblock-File .\project-tabs.ps1
 ```
 
 Files obtained through `git clone` never carry this tag.

@@ -757,7 +757,7 @@ _gitro_presence_field()
     printf '%s\n' "$value"
 }
 
-# Prints who serves through presence file $1, such as 'piquest' (D:/Repos/PiQuest-Unity, pid 1234),
+# Prints who serves through presence file $1, such as 'myproject' (D:/Repos/MyProject, pid 1234),
 # if that server still runs. Prints nothing if there's no file, or the file is stale:
 # not refreshed for a minute, or written on this machine by a process that's gone.
 _gitro_presence_owner()

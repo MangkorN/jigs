@@ -38,21 +38,21 @@
         const [hash, ...subject] = (body('log --oneline -8')[0] || '').split(' ');
         if (hash) parts.push(`The latest commit is \`${hash}\`: "${subject.join(' ')}".`);
 
+        // In status --short, the first column is the staged state and the second the unstaged one.
         const status = body('status --short --branch');
         const branchLine = status.find((line) => line.startsWith('## ')) || '';
         const branch = branchLine.slice(3).split('...')[0].split(' ')[0];
-        const changed = status.filter((line) => !line.startsWith('##') && !line.startsWith('??')).length;
+        const tracked = status.filter((line) => !line.startsWith('##') && !line.startsWith('??'));
+        const unstaged = tracked.filter((line) => line[1] !== ' ').length;
+        const staged = tracked.filter((line) => line[0] !== ' ').length;
         const untracked = status.filter((line) => line.startsWith('??')).length;
         const stat = body('diff --stat');
         const totals = stat.length ? stat[stat.length - 1].trim() : '';
 
-        if (changed) {
-            parts.push(`On \`${branch || 'the branch'}\`, ${plural(changed, 'tracked file has', 'tracked files have')} changes `
-                + `that aren't committed yet${totals ? ` (${totals})` : ''}.`);
-        }
-        else {
-            parts.push('The tracked files have no uncommitted changes.');
-        }
+        const changes = [];
+        if (unstaged) changes.push(`${plural(unstaged, 'file has', 'files have')} unstaged changes${totals ? ` (${totals})` : ''}`);
+        if (staged) changes.push(`${plural(staged, 'file is', 'files are')} staged`);
+        parts.push(changes.length ? `On \`${branch || 'the branch'}\`, ${changes.join(' and ')}.` : 'Nothing is left uncommitted.');
         if (untracked) parts.push(`${plural(untracked, 'new file isn\'t', 'new files aren\'t')} tracked yet.`);
         const ahead = /ahead (\d+)/.exec(branchLine);
         const behind = /behind (\d+)/.exec(branchLine);
@@ -65,7 +65,7 @@
 
     // Each step: something said, or a request the agent sends. Text in backticks shows as code.
     const STEPS = [
-        { person: 'Before I review the jigs changes: what happened lately, and is anything left uncommitted?' },
+        { person: 'Before I review the recipes: what changed lately, and is anything left uncommitted?' },
         { agent: () => `I can't open the repository from here, but \`${data.dir}\` has a \`gitro-server.json\`, so a gitro server `
             + 'answers there. I\'ll ask it.' },
         { request: 'log --oneline -8' },

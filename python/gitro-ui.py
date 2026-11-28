@@ -180,7 +180,7 @@ def pick_folder(title, start):
 
 
 def folder_owner(folder):
-    """Who serves in folder, such as 'piquest' (/home/me/Repos/PiQuest, pid 1234), going by its gitro-server.json,
+    """Who serves in folder, such as 'myproject' (/home/me/Repos/MyProject, pid 1234), going by its gitro-server.json,
     or None if no running server does. The same test as gitro serve's: a file not refreshed for a minute,
     or written on this machine by a process that's gone, is stale."""
     try:

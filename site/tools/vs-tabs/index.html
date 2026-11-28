@@ -28,20 +28,20 @@
     <article class="doc">
 <p>Actions are <code>save</code>, <code>load</code>, <code>list</code>, <code>view</code> (read-only), and <code>help</code> (the default). Action and snapshot name are positional, so <code>.\vs-tabs.ps1 save my-layout</code> is the same as <code>.\vs-tabs.ps1 -Action Save -Name my-layout</code>. Run <code>vs-tabs.ps1</code> with no arguments for full help.</p>
 <h2 id="per-project-wrapper">Per-project wrapper</h2>
-<p><code>examples/pq-tabs/</code> is a wrapper that fills in the solution path for one project. To use it in a project:</p>
+<p><code>examples/project-tabs/</code> is a wrapper that fills in the solution path for one project. To use it in a project:</p>
 <ol>
-<li><p>Copy <code>pq-tabs.ps1</code> and <code>.gitignore</code> into a folder one level below the project root (the folder containing the <code>.sln</code>), e.g. <code>&lt;ProjectRoot&gt;/VSTabs/</code>. Rename the script as you like.</p></li>
+<li><p>Copy <code>project-tabs.ps1</code> and <code>.gitignore</code> into a folder one level below the project root (the folder containing the <code>.sln</code>), e.g. <code>&lt;ProjectRoot&gt;/VSTabs/</code>. Rename the script as you like.</p></li>
 <li><p>Make sure <code>JIGS_DIR</code> is set (see <a href="https://github.com/MangkorN/jigs/blob/main/README.md#powershell">Install</a>).</p></li>
-<li><p>From that folder: <code>.\pq-tabs.ps1 save my-layout</code></p></li>
-<li><p>(Optional) Add a <code>pqt</code> alias to your PowerShell profile so the wrapper runs from any directory:</p>
-<pre data-language="powershell"><code>if (-not (Test-Path $PROFILE)) { New-Item $PROFILE -Force | Out-Null }; Add-Content $PROFILE 'Set-Alias pqt D:\Repos\MyProject\VSTabs\pq-tabs.ps1'</code></pre>
+<li><p>From that folder: <code>.\project-tabs.ps1 save my-layout</code></p></li>
+<li><p>(Optional) Add a <code>pt</code> alias to your PowerShell profile so the wrapper runs from any directory:</p>
+<pre data-language="powershell"><code>if (-not (Test-Path $PROFILE)) { New-Item $PROFILE -Force | Out-Null }; Add-Content $PROFILE 'Set-Alias pt D:\Repos\MyProject\VSTabs\project-tabs.ps1'</code></pre>
 <ul>
 <li><code>$PROFILE</code> is the path of the script PowerShell runs at the start of every session (each PowerShell version has its own).</li>
 <li><code>if (-not (Test-Path $PROFILE)) { New-Item $PROFILE -Force | Out-Null }</code> creates that file, and its folder, only if it doesn't exist yet, so an existing profile is never overwritten.</li>
 <li><code>Add-Content</code> appends the <code>Set-Alias</code> line to the profile, so every new session defines the alias.</li>
 </ul>
 <p>New windows pick it up. For an already open window, run <code>. $PROFILE</code>.</p>
-<p>Then <code>pqt</code>, <code>pqt list</code>, <code>pqt view</code>, <code>pqt view my-layout</code>, <code>pqt save my-layout</code> and <code>pqt load my-layout</code> all work, and snapshot names tab-complete from the wrapper's folder regardless of the current directory.</p></li>
+<p>Then <code>pt</code>, <code>pt list</code>, <code>pt view</code>, <code>pt view my-layout</code>, <code>pt save my-layout</code> and <code>pt load my-layout</code> all work, and snapshot names tab-complete from the wrapper's folder regardless of the current directory.</p></li>
 </ol>
 <p>Snapshots are saved as <code>.json</code> next to the wrapper and ignored by its <code>.gitignore</code>.</p>
     </article>

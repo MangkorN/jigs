@@ -81,7 +81,7 @@ mv /d/Exchange/myproject/t1.tmp /d/Exchange/myproject/t1.req
 sleep 1; cat /d/Exchange/myproject/t1.out</code></pre>
 <p>A <code>help serve</code> request returns these steps, so a caller can learn the protocol through the folder itself. Each server answers for one repository. To serve several, run one per repository, each with its own folder.</p>
 <p>While it runs, a server keeps <code>&lt;dir&gt;/gitro-server.json</code> up to date: its name, repository, host, process id, start time, and the time it last refreshed the file, every 10 seconds. A caller that can see several request folders reads these to find the one serving the repository it wants. The name is the repository's folder name unless <code>-n</code> gives another. One folder has one server: <code>gitro serve</code> refuses a folder whose server is still running, and removes the file when it stops. A file left behind by a server that was killed counts as stale once its process is gone, or after a minute without a refresh.</p>
-<pre data-language="bash"><code>gitro serve -n piquest /d/Repos/PiQuest-Unity /d/Exchange/piquest
+<pre data-language="bash"><code>gitro serve -n backend /d/Repos/MyProject /d/Exchange/myproject
 gitro list /d/Exchange    # the servers answering in /d/Exchange and the folders under it</code></pre>
 <h2 id="connecting-a-caller">Connecting a caller</h2>
 <p>A caller is anything that can write and read files in the request folder: an AI agent in a sandbox, a tool in a VM or container, a script running under another account. It needs no git, no access to the repository and nothing installed.</p>

@@ -72,7 +72,7 @@ A `help serve` request returns these steps, so a caller can learn the protocol t
 While it runs, a server keeps `<dir>/gitro-server.json` up to date: its name, repository, host, process id, start time, and the time it last refreshed the file, every 10 seconds. A caller that can see several request folders reads these to find the one serving the repository it wants. The name is the repository's folder name unless `-n` gives another. One folder has one server: `gitro serve` refuses a folder whose server is still running, and removes the file when it stops. A file left behind by a server that was killed counts as stale once its process is gone, or after a minute without a refresh.
 
 ```bash
-gitro serve -n piquest /d/Repos/PiQuest-Unity /d/Exchange/piquest
+gitro serve -n backend /d/Repos/MyProject /d/Exchange/myproject
 gitro list /d/Exchange    # the servers answering in /d/Exchange and the folders under it
 ```
 

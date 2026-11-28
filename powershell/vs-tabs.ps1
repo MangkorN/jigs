@@ -29,9 +29,9 @@
     itself lives in.
 
 .EXAMPLE
-    .\vs-tabs.ps1 -Action Save -Name combat-refactor
+    .\vs-tabs.ps1 -Action Save -Name login-refactor
 .EXAMPLE
-    .\vs-tabs.ps1 -Action Load -Name combat-refactor
+    .\vs-tabs.ps1 -Action Load -Name login-refactor
 .EXAMPLE
     .\vs-tabs.ps1 -Action List
 .EXAMPLE
@@ -39,19 +39,19 @@
     .\vs-tabs.ps1 -Action View
 .EXAMPLE
     # What a stored snapshot contains, without loading it
-    .\vs-tabs.ps1 -Action View -Name combat-refactor
+    .\vs-tabs.ps1 -Action View -Name login-refactor
 .EXAMPLE
     # Positional form of the same command
-    .\vs-tabs.ps1 view combat-refactor
+    .\vs-tabs.ps1 view login-refactor
 .EXAMPLE
     # Not running from a folder with exactly one .sln (or it has more than one)
-    .\vs-tabs.ps1 -Action Save -Name combat-refactor -SolutionPath D:\Repos\PiQuest-Unity\PiQuest.sln
+    .\vs-tabs.ps1 -Action Save -Name login-refactor -SolutionPath D:\Repos\MyGame\MyGame.sln
 .EXAMPLE
     # Snapshots stored somewhere other than the script's own folder
-    .\vs-tabs.ps1 -Action Load -Name combat-refactor -LayoutsDir D:\Shared\VSLayouts
+    .\vs-tabs.ps1 -Action Load -Name login-refactor -LayoutsDir D:\Shared\VSLayouts
 .EXAMPLE
     # Both overrides combine independently
-    .\vs-tabs.ps1 -Action List -SolutionPath D:\Repos\PiQuest-Unity\PiQuest.sln -LayoutsDir D:\Shared\VSLayouts
+    .\vs-tabs.ps1 -Action List -SolutionPath D:\Repos\MyGame\MyGame.sln -LayoutsDir D:\Shared\VSLayouts
 #>
 
 [CmdletBinding()]
@@ -121,8 +121,8 @@ so save captures the tabs as of its last exit, and a load done while it's open
 is overwritten when it exits.
 
 examples
-   .\vs-tabs.ps1 save combat-refactor
-   .\vs-tabs.ps1 load combat-refactor -SolutionPath D:\Repos\MyGame\MyGame.sln
+   .\vs-tabs.ps1 save login-refactor
+   .\vs-tabs.ps1 load login-refactor -SolutionPath D:\Repos\MyGame\MyGame.sln
 
 If PowerShell refuses to run this script, see "Execution policy" in the jigs
 README. 'Get-Help .\vs-tabs.ps1 -Examples' shows more examples.
@@ -221,7 +221,7 @@ function Format-DocumentSummary {
 function ConvertTo-SnapshotName {
     # Strips a directory prefix (from a tab-completed relative/absolute path)
     # and a literal trailing ".json" - but not just "whatever's after the
-    # last dot", so a name like v1.2-combat-refactor survives unmangled.
+    # last dot", so a name like v1.2-login-refactor survives unmangled.
     param([string]$Raw)
     if (-not $Raw) { return $Raw }
     $base = Split-Path $Raw -Leaf

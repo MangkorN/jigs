@@ -10,16 +10,16 @@
     jigs README: https://github.com/MangkorN/jigs#execution-policy
 
 .EXAMPLE
-    .\pq-tabs.ps1
+    .\project-tabs.ps1
 .EXAMPLE
-    .\pq-tabs.ps1 -Action Save -Name combat-refactor
+    .\project-tabs.ps1 -Action Save -Name login-refactor
 .EXAMPLE
-    .\pq-tabs.ps1 -Action Load -Name combat-refactor
+    .\project-tabs.ps1 -Action Load -Name login-refactor
 .EXAMPLE
-    .\pq-tabs.ps1 -Action View -Name combat-refactor
+    .\project-tabs.ps1 -Action View -Name login-refactor
 .EXAMPLE
-    # Positional form, via a profile alias (Set-Alias pqt <path>\pq-tabs.ps1)
-    pqt load combat-refactor
+    # Positional form, via a profile alias (Set-Alias pt <path>\project-tabs.ps1)
+    pt load login-refactor
 #>
 
 [CmdletBinding()]
